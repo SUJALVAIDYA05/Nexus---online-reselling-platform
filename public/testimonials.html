@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testimonials — Nexus Consulting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --clr-primary: #1a1a2e;
+      --clr-accent: #e94560;
+      --clr-accent2: #0f3460;
+      --clr-light: #f8f9fa;
+      --clr-dark: #16213e;
+      --clr-text: #4a4a5a;
+      --clr-white: #ffffff;
+      --ff: 'Inter', -apple-system, sans-serif;
+      --max-w: 1200px;
+      --shadow: 0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg: 0 12px 48px rgba(0,0,0,.12);
+      --radius: 16px;
+      --transition: 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--ff);
+      color: var(--clr-text);
+      background: var(--clr-white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    .container { width: 90%; max-width: var(--max-w); margin: 0 auto; }
+
+    #preloader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: var(--clr-primary);
+      display: grid; place-items: center;
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-ring {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,.1);
+      border-top-color: var(--clr-accent);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 1rem 0;
+      transition: var(--transition);
+      background: transparent;
+    }
+    .navbar.scrolled { background: rgba(255,255,255,.92); backdrop-filter: blur(16px); box-shadow: var(--shadow); padding: .6rem 0; }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: var(--clr-white); letter-spacing: -.03em; }
+    .navbar.scrolled .logo { color: var(--clr-primary); }
+    .logo span { color: var(--clr-accent); }
+    .nav-links { display: flex; align-items: center; gap: 2.2rem; }
+    .nav-links a {
+      font-size: .9rem; font-weight: 500;
+      color: rgba(255,255,255,.8);
+      transition: var(--transition);
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--clr-accent);
+      transition: var(--transition);
+    }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-links a:hover { color: var(--clr-white); }
+    .navbar.scrolled .nav-links a { color: var(--clr-text); }
+    .navbar.scrolled .nav-links a:hover { color: var(--clr-primary); }
+    .nav-links a.active::after { width: 100%; }
+    .nav-links a.active { color: var(--clr-accent); }
+    .navbar.scrolled .nav-links a.active { color: var(--clr-accent); }
+
+    .btn-link {
+      font-size: .9rem; font-weight: 500;
+      color: rgba(255,255,255,.8); background: none; border: none; cursor: pointer;
+      transition: var(--transition); font-family: var(--ff);
+      position: relative;
+    }
+    .btn-link::after {
+      content: '';
+      position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--clr-accent);
+      transition: var(--transition);
+    }
+    .btn-link:hover::after { width: 100%; }
+    .btn-link:hover { color: var(--clr-white); }
+    .navbar.scrolled .btn-link { color: var(--clr-text); }
+    .navbar.scrolled .btn-link:hover { color: var(--clr-primary); }
+
+    .nav-cta {
+      background: var(--clr-accent); color: #fff !important;
+      padding: .55rem 1.4rem; border-radius: 50px;
+      font-weight: 600; font-size: .85rem;
+      transition: var(--transition);
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,69,96,.35); }
+    .nav-cta::after { display: none !important; }
+
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+    .hamburger span { width: 26px; height: 2.5px; background: var(--clr-white); border-radius: 4px; transition: var(--transition); }
+    .navbar.scrolled .hamburger span { background: var(--clr-primary); }
+
+    .page-header {
+      min-height: 50vh;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-dark) 50%, #0a0a23 100%);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding-top: 5rem;
+    }
+    .page-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 60%, rgba(233,69,96,.12) 0%, transparent 60%);
+    }
+    .page-header-content { position: relative; z-index: 1; }
+    .page-header h1 {
+      font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+      font-weight: 800;
+      color: var(--clr-white);
+      margin-bottom: .8rem;
+    }
+    .page-header h1 span { color: var(--clr-accent); }
+    .page-header p {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,.6);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    section { padding: 6rem 0; }
+    .section-label {
+      display: inline-block; font-size: .8rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .12em;
+      color: var(--clr-accent); margin-bottom: .6rem;
+    }
+    .section-title { font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 800; color: var(--clr-primary); margin-bottom: 1rem; }
+    .section-desc { font-size: 1.05rem; color: var(--clr-text); max-width: 600px; }
+
+    #testimonials { background: var(--clr-light); }
+    .testimonials-header { text-align: center; margin-bottom: 3.5rem; }
+    .testimonials-header .section-desc { margin: 0 auto; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+    .testimonial-card { background: var(--clr-white); padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); transition: var(--transition); }
+    .testimonial-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
+    .testimonial-stars { color: #f59e0b; margin-bottom: 1rem; font-size: .9rem; }
+    .testimonial-card > p { font-size: .92rem; font-style: italic; line-height: 1.7; margin-bottom: 1.5rem; }
+    .testimonial-author { display: flex; align-items: center; gap: 1rem; }
+    .testimonial-avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 1rem; transition: var(--transition); }
+    .testimonial-card:hover .testimonial-avatar { transform: scale(1.1); }
+    .testimonial-author h4 { font-size: .9rem; color: var(--clr-primary); }
+    .testimonial-author p { font-size: .78rem; margin: 0; }
+
+    .more-testimonials { background: var(--clr-white); }
+    .more-testimonials .testimonials-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+    .cta-section {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-dark) 100%);
+      text-align: center;
+      padding: 5rem 0;
+    }
+    .cta-section h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 800; color: #fff; margin-bottom: .8rem; }
+    .cta-section p { color: rgba(255,255,255,.6); font-size: 1.05rem; margin-bottom: 2rem; }
+    .cta-section .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .9rem 2rem;
+      border-radius: 50px;
+      font-weight: 600; font-size: .95rem;
+      border: none; cursor: pointer;
+      transition: var(--transition);
+      font-family: var(--ff);
+    }
+    .cta-section .btn-primary { background: var(--clr-accent); color: #fff; }
+    .cta-section .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(233,69,96,.4); }
+
+    footer { background: var(--clr-primary); color: rgba(255,255,255,.7); padding: 3rem 0 1.5rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 2.5rem; }
+    .footer-brand .logo { color: var(--clr-white); font-size: 1.4rem; margin-bottom: .8rem; display: inline-block; }
+    .footer-brand p { font-size: .88rem; max-width: 320px; }
+    .footer-social { display: flex; gap: .8rem; margin-top: 1.2rem; }
+    .footer-social a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; transition: var(--transition); font-size: .9rem; }
+    .footer-social a:hover { background: var(--clr-accent); border-color: var(--clr-accent); color: #fff; transform: translateY(-3px); }
+    footer h4 { color: #fff; font-size: .95rem; margin-bottom: 1.2rem; }
+    footer ul li { margin-bottom: .6rem; }
+    footer ul a { font-size: .88rem; transition: var(--transition); }
+    footer ul a:hover { padding-left: 6px; color: var(--clr-accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; font-size: .82rem; }
+    .footer-bottom i { color: var(--clr-accent); }
+
+    #backToTop {
+      position: fixed; bottom: 2rem; right: 2rem;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--clr-accent); color: #fff; border: none;
+      font-size: 1.1rem; cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; transform: translateY(20px);
+      transition: var(--transition); z-index: 999;
+    }
+    #backToTop.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    #backToTop:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(233,69,96,.45); }
+
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s cubic-bezier(.4,0,.2,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-50px); transition: opacity .7s ease, transform .7s cubic-bezier(.4,0,.2,1); }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right { opacity: 0; transform: translateX(50px); transition: opacity .7s ease, transform .7s cubic-bezier(.4,0,.2,1); }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+    .rating-summary { text-align: center; margin-bottom: 3rem; }
+    .rating-summary .big-rating { font-size: 3.5rem; font-weight: 800; color: var(--clr-primary); }
+    .rating-summary .big-rating span { color: var(--clr-accent); }
+    .rating-summary p { color: var(--clr-text); font-size: .95rem; }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: rgba(255,255,255,.96); backdrop-filter: blur(16px); padding: 1.5rem 2rem; flex-direction: column; gap: 1.2rem; box-shadow: var(--shadow-lg); }
+      .nav-links.open { display: flex; }
+      .nav-links a { color: var(--clr-text); }
+      .nav-links a::after { background: var(--clr-accent); }
+      .hamburger { display: flex; }
+      .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .testimonials-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="preloader"><div class="loader-ring"></div></div>
+  <button id="backToTop" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">Nexus<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/services">Services</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/testimonials" class="active">Testimonials</a></li>
+        <li><a href="/login" class="btn-link">Sign In</a></li>
+        <li><a href="/signup" class="nav-cta">Get Started</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <section class="page-header">
+    <div class="page-header-content reveal">
+      <h1>Client <span>Testimonials</span></h1>
+      <p>Hear from the businesses we've helped grow — real results from real partnerships.</p>
+    </div>
+  </section>
+
+  <section id="testimonials">
+    <div class="container">
+      <div class="rating-summary reveal">
+        <div class="big-rating"><span>4.9</span> / 5.0</div>
+        <div class="testimonial-stars" style="font-size:1.4rem; margin-bottom:.4rem;"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <p>Based on 100+ verified client reviews</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal" style="transition-delay:0s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"Nexus transformed our digital presence from outdated to industry-leading. Revenue doubled within 6 months of our engagement."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#e94560,#c23152);">SK</div><div><h4>Sarah Kim</h4><p>CEO, BrightHome Realty</p></div></div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:.1s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"Their strategic approach to our brand repositioning was exceptional. Every recommendation was backed by data and delivered measurable impact."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0f3460,#1a5276);">MR</div><div><h4>Marcus Rivera</h4><p>Founder, Elevate Tech</p></div></div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:.2s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"Working with Nexus felt like an extension of our own team. They deeply understood our industry, our challenges, and our vision."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#10b981,#059669);">AL</div><div><h4>Aiko Tanaka</h4><p>Director, GreenPath Advisory</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="more-testimonials">
+    <div class="container">
+      <div class="testimonials-header reveal">
+        <span class="section-label">More Stories</span>
+        <h2 class="section-title">What else our clients say</h2>
+        <p class="section-desc">Don't just take our word for it — hear from more of our partners.</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal" style="transition-delay:0s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"The Nexus team helped us refine our value proposition and go-to-market strategy. Within a quarter, we saw a 60% increase in qualified leads."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706);">DJ</div><div><h4>David Johnson</h4><p>COO, Meridian Health</p></div></div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:.1s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"From brand strategy to web development, Nexus delivered a cohesive experience that perfectly captured our mission. Exceptional work."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">PW</div><div><h4>Priya Williams</h4><p>Founder, Lumina Education</p></div></div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:.2s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"Nexus didn't just deliver a strategy — they helped us implement it. Their hands-on approach made all the difference in our transformation."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#ec4899,#be185d);">TC</div><div><h4>Thomas Chen</h4><p>VP of Operations, Apex Logistics</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="container reveal">
+      <h2>Ready to become our next success story?</h2>
+      <p>Join 50+ businesses that trust Nexus to drive their growth.</p>
+      <a href="/signup" class="btn btn-primary">Get Started <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><a href="/" class="logo">Nexus<span>.</span></a><p>Strategy. Growth. Results. We help ambitious businesses reach their full potential through smart strategy and flawless execution.</p><div class="footer-social"><a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a><a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a><a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a><a href="#" aria-label="Dribbble"><i class="fab fa-dribbble"></i></a></div></div>
+        <div><h4>Services</h4><ul><li><a href="/services">Strategy &amp; Consulting</a></li><li><a href="/services">Brand &amp; Design</a></li><li><a href="/services">Web &amp; Digital</a></li><li><a href="/services">Growth Marketing</a></li></ul></div>
+        <div><h4>Company</h4><ul><li><a href="/about">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Press</a></li></ul></div>
+        <div><h4>Support</h4><ul><li><a href="#">Contact</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">FAQ</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><p>&copy; 2026 Nexus Consulting. All rights reserved.</p><p>Made with <i class="fas fa-heart"></i> in New York</p></div>
+    </div>
+  </footer>
+
+  <script>
+    window.addEventListener('load', () => document.getElementById('preloader').classList.add('hidden'));
+
+    const navbar = document.getElementById('navbar');
+    const header = document.querySelector('.page-header');
+    new IntersectionObserver(([e]) => navbar.classList.toggle('scrolled', !e.isIntersecting), { rootMargin: '-80px 0px 0px 0px' }).observe(header);
+
+    document.getElementById('hamburger').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+    document.querySelectorAll('#navLinks a').forEach(el => el.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open')));
+
+    const ro = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); ro.unobserve(e.target); } }); }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => ro.observe(el));
+
+    const backBtn = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => backBtn.classList.toggle('visible', window.scrollY > 600));
+    backBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  </script>
+</body>
+</html>

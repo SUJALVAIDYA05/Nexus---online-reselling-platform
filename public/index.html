@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus Consulting — Strategy. Growth. Results.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --clr-primary: #1a1a2e;
+      --clr-accent: #e94560;
+      --clr-accent2: #0f3460;
+      --clr-light: #f8f9fa;
+      --clr-dark: #16213e;
+      --clr-text: #4a4a5a;
+      --clr-white: #ffffff;
+      --ff: 'Inter', -apple-system, sans-serif;
+      --max-w: 1200px;
+      --shadow: 0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg: 0 12px 48px rgba(0,0,0,.12);
+      --radius: 16px;
+      --transition: 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--ff);
+      color: var(--clr-text);
+      background: var(--clr-white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    ul { list-style: none; }
+
+    .container { width: 90%; max-width: var(--max-w); margin: 0 auto; }
+
+    /* ===== PRE-LOADER ===== */
+    #preloader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: var(--clr-primary);
+      display: grid; place-items: center;
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-ring {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,.1);
+      border-top-color: var(--clr-accent);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 1rem 0;
+      transition: var(--transition);
+      background: transparent;
+    }
+    .navbar.scrolled { background: rgba(255,255,255,.92); backdrop-filter: blur(16px); box-shadow: var(--shadow); padding: .6rem 0; }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: var(--clr-white); letter-spacing: -.03em; }
+    .navbar.scrolled .logo { color: var(--clr-primary); }
+    .logo span { color: var(--clr-accent); }
+    .nav-links { display: flex; align-items: center; gap: 2.2rem; }
+    .nav-links a {
+      font-size: .9rem; font-weight: 500;
+      color: rgba(255,255,255,.8);
+      transition: var(--transition);
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--clr-accent);
+      transition: var(--transition);
+    }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-links a:hover { color: var(--clr-white); }
+    .navbar.scrolled .nav-links a { color: var(--clr-text); }
+    .navbar.scrolled .nav-links a:hover { color: var(--clr-primary); }
+
+    .btn-link {
+      font-size: .9rem; font-weight: 500;
+      color: rgba(255,255,255,.8); background: none; border: none; cursor: pointer;
+      transition: var(--transition); font-family: var(--ff);
+      position: relative;
+    }
+    .btn-link::after {
+      content: '';
+      position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--clr-accent);
+      transition: var(--transition);
+    }
+    .btn-link:hover::after { width: 100%; }
+    .btn-link:hover { color: var(--clr-white); }
+    .navbar.scrolled .btn-link { color: var(--clr-text); }
+    .navbar.scrolled .btn-link:hover { color: var(--clr-primary); }
+
+    .nav-cta {
+      background: var(--clr-accent); color: #fff !important;
+      padding: .55rem 1.4rem; border-radius: 50px;
+      font-weight: 600; font-size: .85rem;
+      transition: var(--transition);
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,69,96,.35); }
+    .nav-cta::after { display: none !important; }
+
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+    .hamburger span { width: 26px; height: 2.5px; background: var(--clr-white); border-radius: 4px; transition: var(--transition); }
+    .navbar.scrolled .hamburger span { background: var(--clr-primary); }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-dark) 50%, #0a0a23 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(233,69,96,.15) 0%, transparent 60%);
+    }
+    .hero-particles { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+    .particle {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: rgba(233,69,96,.25);
+      border-radius: 50%;
+      animation: particleFloat linear infinite;
+    }
+    @keyframes particleFloat {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 1; }
+    .hero-content { opacity: 0; transform: translateY(40px); animation: heroIn 0.8s ease 0.3s forwards; }
+    @keyframes heroIn { to { opacity: 1; transform: translateY(0); } }
+    .hero h1 {
+      font-size: clamp(2.6rem, 5vw, 4rem);
+      font-weight: 800;
+      color: var(--clr-white);
+      line-height: 1.15;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 span { color: var(--clr-accent); }
+    .hero h1 .typing-cursor { display: inline-block; width: 3px; height: 1em; background: var(--clr-accent); margin-left: 4px; animation: blink 0.7s step-end infinite; vertical-align: text-bottom; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .hero p {
+      font-size: 1.15rem;
+      color: rgba(255,255,255,.65);
+      max-width: 520px;
+      margin-bottom: 2.2rem;
+    }
+    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .9rem 2rem;
+      border-radius: 50px;
+      font-weight: 600; font-size: .95rem;
+      border: none; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: var(--transition);
+      font-family: var(--ff);
+    }
+    .btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,.08);
+      transform: translateX(-100%) skewX(-20deg);
+      transition: transform .5s ease;
+    }
+    .btn:hover::before { transform: translateX(100%) skewX(-20deg); }
+    .btn-primary { background: var(--clr-accent); color: #fff; }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(233,69,96,.4); }
+    .btn-outline { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.25); }
+    .btn-outline:hover { border-color: var(--clr-accent); background: rgba(233,69,96,.1); transform: translateY(-3px); }
+
+    .hero-visual { position: relative; display: flex; justify-content: center; align-items: center; opacity: 0; transform: translateY(40px); animation: heroIn 0.8s ease 0.6s forwards; }
+    .hero-card {
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      transition: var(--transition);
+    }
+    .hero-card:hover { transform: scale(1.02); border-color: rgba(233,69,96,.3); }
+    .hero-stat { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,.06); transition: var(--transition); }
+    .hero-stat:last-child { border-bottom: none; }
+    .hero-stat:hover { padding-left: 8px; }
+    .hero-stat-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; color: #fff; flex-shrink: 0; }
+    .hero-stat-icon.green { background: #10b981; }
+    .hero-stat-icon.blue { background: #3b82f6; }
+    .hero-stat-icon.orange { background: #f59e0b; }
+    .hero-stat-text h4 { color: #fff; font-size: .95rem; font-weight: 600; }
+    .hero-stat-text p { color: rgba(255,255,255,.5); font-size: .8rem; margin: 0; }
+
+    .floating-badge {
+      position: absolute;
+      bottom: -10px; right: -10px;
+      background: var(--clr-accent);
+      color: #fff;
+      padding: 1rem 1.4rem;
+      border-radius: var(--radius);
+      font-weight: 700;
+      font-size: .9rem;
+      box-shadow: var(--shadow-lg);
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* ===== SECTIONS ===== */
+    section { padding: 6rem 0; }
+    .section-label {
+      display: inline-block; font-size: .8rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .12em;
+      color: var(--clr-accent); margin-bottom: .6rem;
+    }
+    .section-title { font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 800; color: var(--clr-primary); margin-bottom: 1rem; }
+    .section-desc { font-size: 1.05rem; color: var(--clr-text); max-width: 600px; }
+
+    /* ===== SERVICES ===== */
+    #services { background: var(--clr-light); position: relative; overflow: hidden; }
+    .services-header { text-align: center; margin-bottom: 3.5rem; }
+    .services-header .section-desc { margin: 0 auto; }
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+    .service-card { background: var(--clr-white); padding: 2.5rem 2rem; border-radius: var(--radius); box-shadow: var(--shadow); transition: var(--transition); border: 1px solid transparent; }
+    .service-card:hover { transform: translateY(-10px) scale(1.02); box-shadow: var(--shadow-lg); border-color: var(--clr-accent); }
+    .service-icon { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 1.4rem; color: #fff; margin-bottom: 1.2rem; transition: var(--transition); }
+    .service-card:hover .service-icon { transform: scale(1.12) rotate(-6deg); }
+    .service-icon.c1 { background: linear-gradient(135deg, #e94560, #c23152); }
+    .service-icon.c2 { background: linear-gradient(135deg, #0f3460, #1a5276); }
+    .service-icon.c3 { background: linear-gradient(135deg, #10b981, #059669); }
+    .service-icon.c4 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .service-card h3 { font-size: 1.2rem; color: var(--clr-primary); margin-bottom: .6rem; }
+    .service-card p { font-size: .9rem; line-height: 1.7; }
+
+    /* ===== ABOUT ===== */
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
+    .about-stat { text-align: center; padding: 1rem; border-radius: 12px; transition: var(--transition); }
+    .about-stat:hover { background: var(--clr-light); transform: translateY(-4px); }
+    .about-stat h3 { font-size: 2.2rem; font-weight: 800; color: var(--clr-primary); }
+    .about-stat h3 span { color: var(--clr-accent); }
+    .about-stat p { font-size: .85rem; color: var(--clr-text); }
+    .about-image { background: linear-gradient(135deg, var(--clr-primary), var(--clr-dark)); border-radius: var(--radius); height: 400px; display: grid; place-items: center; color: rgba(255,255,255,.08); font-size: 5rem; position: relative; overflow: hidden; transition: var(--transition); }
+    .about-image:hover { transform: scale(1.02); }
+    .about-image::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 70%, rgba(233,69,96,.1) 0%, transparent 50%); transition: var(--transition); }
+    .about-image:hover::before { background: radial-gradient(circle at 30% 70%, rgba(233,69,96,.2) 0%, transparent 50%); }
+
+    /* ===== TESTIMONIALS ===== */
+    #testimonials { background: var(--clr-light); }
+    .testimonials-header { text-align: center; margin-bottom: 3.5rem; }
+    .testimonials-header .section-desc { margin: 0 auto; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+    .testimonial-card { background: var(--clr-white); padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); transition: var(--transition); }
+    .testimonial-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
+    .testimonial-stars { color: #f59e0b; margin-bottom: 1rem; font-size: .9rem; }
+    .testimonial-card > p { font-size: .92rem; font-style: italic; line-height: 1.7; margin-bottom: 1.5rem; }
+    .testimonial-author { display: flex; align-items: center; gap: 1rem; }
+    .testimonial-avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 1rem; transition: var(--transition); }
+    .testimonial-card:hover .testimonial-avatar { transform: scale(1.1); }
+    .testimonial-author h4 { font-size: .9rem; color: var(--clr-primary); }
+    .testimonial-author p { font-size: .78rem; margin: 0; }
+
+    /* ===== CONTACT ===== */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+    .contact-info h3 { font-size: 1.4rem; color: var(--clr-primary); margin-bottom: .8rem; }
+    .contact-info > p { margin-bottom: 2rem; }
+    .contact-item { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; padding: .6rem 1rem; border-radius: 10px; transition: var(--transition); }
+    .contact-item:hover { background: var(--clr-light); transform: translateX(6px); }
+    .contact-item i { width: 20px; color: var(--clr-accent); font-size: 1.1rem; }
+    .contact-item p { font-size: .9rem; }
+
+    .contact-form { display: flex; flex-direction: column; gap: 1.2rem; }
+    .form-group { position: relative; }
+    .form-group input, .form-group textarea {
+      width: 100%; padding: 1rem 1.2rem;
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      font-family: var(--ff); font-size: .9rem; outline: none;
+      transition: var(--transition); background: var(--clr-light);
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(233,69,96,.12); }
+    .form-group textarea { resize: vertical; min-height: 130px; }
+    .form-group label {
+      position: absolute; top: 50%; left: 1.2rem;
+      transform: translateY(-50%); font-size: .9rem; color: #94a3b8;
+      pointer-events: none; transition: var(--transition); background: var(--clr-light); padding: 0 4px;
+    }
+    .form-group textarea ~ label { top: 1rem; transform: none; }
+    .form-group input:focus ~ label, .form-group textarea:focus ~ label,
+    .form-group input.filled ~ label, .form-group textarea.filled ~ label {
+      top: 0; transform: translateY(-50%); font-size: .75rem; color: var(--clr-accent);
+    }
+    .contact-form .btn { align-self: flex-start; }
+
+    /* ===== FOOTER ===== */
+    footer { background: var(--clr-primary); color: rgba(255,255,255,.7); padding: 3rem 0 1.5rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 2.5rem; }
+    .footer-brand .logo { color: var(--clr-white); font-size: 1.4rem; margin-bottom: .8rem; display: inline-block; }
+    .footer-brand p { font-size: .88rem; max-width: 320px; }
+    .footer-social { display: flex; gap: .8rem; margin-top: 1.2rem; }
+    .footer-social a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; transition: var(--transition); font-size: .9rem; }
+    .footer-social a:hover { background: var(--clr-accent); border-color: var(--clr-accent); color: #fff; transform: translateY(-3px); }
+    footer h4 { color: #fff; font-size: .95rem; margin-bottom: 1.2rem; }
+    footer ul li { margin-bottom: .6rem; }
+    footer ul a { font-size: .88rem; transition: var(--transition); }
+    footer ul a:hover { padding-left: 6px; color: var(--clr-accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; font-size: .82rem; }
+
+    /* ===== BACK TO TOP ===== */
+    #backToTop {
+      position: fixed; bottom: 2rem; right: 2rem;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--clr-accent); color: #fff; border: none;
+      font-size: 1.1rem; cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; transform: translateY(20px);
+      transition: var(--transition); z-index: 999;
+    }
+    #backToTop.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    #backToTop:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(233,69,96,.45); }
+
+    /* ===== SCROLL REVEAL ===== */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s cubic-bezier(.4,0,.2,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-left { opacity: 0; transform: translateX(-50px); transition: opacity .7s ease, transform .7s cubic-bezier(.4,0,.2,1); }
+    .reveal-left.visible { opacity: 1; transform: translateX(0); }
+    .reveal-right { opacity: 0; transform: translateX(50px); transition: opacity .7s ease, transform .7s cubic-bezier(.4,0,.2,1); }
+    .reveal-right.visible { opacity: 1; transform: translateX(0); }
+    .reveal-scale { opacity: 0; transform: scale(.88); transition: opacity .7s ease, transform .7s cubic-bezier(.4,0,.2,1); }
+    .reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+    @media (max-width: 968px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+      .hero p { margin: 0 auto 2rem; }
+      .hero-btns { justify-content: center; }
+      .about-grid { grid-template-columns: 1fr; }
+      .about-image { height: 260px; order: -1; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: rgba(255,255,255,.96); backdrop-filter: blur(16px); padding: 1.5rem 2rem; flex-direction: column; gap: 1.2rem; box-shadow: var(--shadow-lg); }
+      .nav-links.open { display: flex; }
+      .nav-links a { color: var(--clr-text); }
+      .nav-links a::after { background: var(--clr-accent); }
+      .hamburger { display: flex; }
+      .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .hero-card { padding: 1.5rem; }
+      .floating-badge { display: none; }
+      .about-stats { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .services-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="preloader"><div class="loader-ring"></div></div>
+  <button id="backToTop" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">Nexus<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/services">Services</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/testimonials">Testimonials</a></li>
+        <li><a href="/login" class="btn-link">Sign In</a></li>
+        <li><a href="/signup" class="nav-cta">Get Started</a></li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <section class="hero" id="hero">
+    <div class="hero-particles" id="particles"></div>
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <h1>Strategy. Growth.<br /><span id="typeTarget">Results.</span><span class="typing-cursor"></span></h1>
+        <p>We partner with ambitious businesses to build brands that dominate markets. Strategy meets execution — on time, on budget.</p>
+        <div class="hero-btns">
+          <a href="/signup" class="btn btn-primary">Get Started <i class="fas fa-arrow-right"></i></a>
+          <a href="/#services" class="btn btn-outline">Our Services</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="hero-stat"><div class="hero-stat-icon green"><i class="fas fa-chart-line"></i></div><div class="hero-stat-text"><h4>Revenue Growth</h4><p>Avg. 40% YoY for our clients</p></div></div>
+          <div class="hero-stat"><div class="hero-stat-icon blue"><i class="fas fa-users"></i></div><div class="hero-stat-text"><h4>Trusted Advisors</h4><p>50+ businesses served</p></div></div>
+          <div class="hero-stat"><div class="hero-stat-icon orange"><i class="fas fa-clock"></i></div><div class="hero-stat-text"><h4>Speed to Market</h4><p>Projects delivered in 6 weeks avg.</p></div></div>
+        </div>
+        <div class="floating-badge">⭐ 4.9 / 5.0</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="container">
+      <div class="services-header reveal">
+        <span class="section-label">What We Do</span>
+        <h2 class="section-title">Services designed to scale your business</h2>
+        <p class="section-desc">From brand strategy to digital execution — we deliver end-to-end solutions that drive measurable outcomes.</p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card reveal" style="transition-delay:0s;"><div class="service-icon c1"><i class="fas fa-bullseye"></i></div><h3>Strategy &amp; Consulting</h3><p>Market analysis, competitive positioning, and go-to-market strategies tailored to your industry and growth stage.</p></div>
+        <div class="service-card reveal" style="transition-delay:.1s;"><div class="service-icon c2"><i class="fas fa-paint-brush"></i></div><h3>Brand &amp; Design</h3><p>Identity systems, visual storytelling, and design that communicates your value at every touchpoint.</p></div>
+        <div class="service-card reveal" style="transition-delay:.2s;"><div class="service-icon c3"><i class="fas fa-code"></i></div><h3>Web &amp; Digital</h3><p>High-performance websites, web apps, and digital products built for speed, conversion, and scale.</p></div>
+        <div class="service-card reveal" style="transition-delay:.3s;"><div class="service-icon c4"><i class="fas fa-rocket"></i></div><h3>Growth Marketing</h3><p>Data-driven campaigns, SEO, paid media, and conversion optimization to grow your bottom line.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="container about-grid">
+      <div>
+        <div class="reveal-left">
+          <span class="section-label">About Us</span>
+          <h2 class="section-title">We build the bridge between vision and reality</h2>
+          <p style="margin-bottom:1rem;">Nexus was founded in 2018 with a simple belief — that great strategy paired with flawless execution is the only thing separating good businesses from great ones.</p>
+          <p style="margin-bottom:.5rem;">Today we're a team of 30+ strategists, designers, and engineers working with companies ranging from early-stage startups to established enterprises.</p>
+        </div>
+        <div class="about-stats">
+          <div class="about-stat reveal-scale" style="transition-delay:0s;"><h3><span data-count="50">0</span>+</h3><p>Clients Served</p></div>
+          <div class="about-stat reveal-scale" style="transition-delay:.1s;"><h3><span data-count="6">0</span>+</h3><p>Years in Business</p></div>
+          <div class="about-stat reveal-scale" style="transition-delay:.2s;"><h3><span data-count="98">0</span>%</h3><p>Client Retention</p></div>
+          <div class="about-stat reveal-scale" style="transition-delay:.3s;"><h3><span data-count="30">0</span>+</h3><p>Team Members</p></div>
+        </div>
+      </div>
+      <div class="about-image reveal-right"><i class="fas fa-building"></i></div>
+    </div>
+  </section>
+
+  <section id="testimonials">
+    <div class="container">
+      <div class="testimonials-header reveal">
+        <span class="section-label">Testimonials</span>
+        <h2 class="section-title">What our clients say</h2>
+        <p class="section-desc">Real results from real partnerships — hear from the businesses we've helped grow.</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal" style="transition-delay:0s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"Nexus transformed our digital presence from outdated to industry-leading. Revenue doubled within 6 months."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#e94560,#c23152);">SK</div><div><h4>Sarah Kim</h4><p>CEO, BrightHome Realty</p></div></div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:.1s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"Their strategic approach to our brand repositioning was exceptional. Every recommendation was backed by data."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#0f3460,#1a5276);">MR</div><div><h4>Marcus Rivera</h4><p>Founder, Elevate Tech</p></div></div>
+        </div>
+        <div class="testimonial-card reveal" style="transition-delay:.2s;">
+          <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+          <p>"Working with Nexus felt like an extension of our own team. They deeply understood our industry and our brand."</p>
+          <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#10b981,#059669);">AL</div><div><h4>Aiko Tanaka</h4><p>Director, GreenPath Advisory</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">Contact</span>
+        <h2 class="section-title">Let's start a conversation</h2>
+        <p class="section-desc" style="margin-bottom:3rem;">Tell us about your project — we'll get back to you within 24 hours.</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info reveal-left">
+          <h3>Get in touch</h3>
+          <p>We'd love to hear from you. Reach out using any of the channels below, or fill in the form and we'll respond promptly.</p>
+          <div class="contact-item"><i class="fas fa-envelope"></i><p>hello@nexusconsulting.com</p></div>
+          <div class="contact-item"><i class="fas fa-phone"></i><p>+1 (555) 123-4567</p></div>
+          <div class="contact-item"><i class="fas fa-map-marker-alt"></i><p>200 Park Ave, Suite 1500, New York, NY 10166</p></div>
+        </div>
+        <form class="contact-form reveal-right" onsubmit="event.preventDefault(); alert('Thanks for reaching out! We\'ll be in touch shortly.');">
+          <div class="form-group"><input type="text" id="contactName" placeholder=" " required /><label for="contactName">Your name</label></div>
+          <div class="form-group"><input type="email" id="contactEmail" placeholder=" " required /><label for="contactEmail">Your email</label></div>
+          <div class="form-group"><input type="text" id="contactCompany" placeholder=" " /><label for="contactCompany">Company name</label></div>
+          <div class="form-group"><textarea id="contactMsg" placeholder=" " required></textarea><label for="contactMsg">Tell us about your project...</label></div>
+          <button type="submit" class="btn btn-primary">Send Message <i class="fas fa-paper-plane"></i></button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><a href="/" class="logo">Nexus<span>.</span></a><p>Strategy. Growth. Results. We help ambitious businesses reach their full potential through smart strategy and flawless execution.</p><div class="footer-social"><a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a><a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a><a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a><a href="#" aria-label="Dribbble"><i class="fab fa-dribbble"></i></a></div></div>
+        <div><h4>Services</h4><ul><li><a href="#">Strategy &amp; Consulting</a></li><li><a href="#">Brand &amp; Design</a></li><li><a href="#">Web &amp; Digital</a></li><li><a href="#">Growth Marketing</a></li></ul></div>
+        <div><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Press</a></li></ul></div>
+        <div><h4>Support</h4><ul><li><a href="#">Contact</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">FAQ</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><p>&copy; 2026 Nexus Consulting. All rights reserved.</p><p>Made with <i class="fas fa-heart" style="color:var(--clr-accent);"></i> in New York</p></div>
+    </div>
+  </footer>
+
+  <script>
+    window.addEventListener('load', () => document.getElementById('preloader').classList.add('hidden'));
+
+    (function spawnParticles() {
+      const c = document.getElementById('particles');
+      for (let i = 0; i < 30; i++) { const p = document.createElement('div'); p.className = 'particle'; const s = 3 + Math.random() * 5; p.style.width = s + 'px'; p.style.height = s + 'px'; p.style.left = Math.random() * 100 + '%'; p.style.animationDuration = 8 + Math.random() * 16 + 's'; p.style.animationDelay = Math.random() * 10 + 's'; p.style.opacity = 0.15 + Math.random() * 0.3; c.appendChild(p); }
+    })();
+
+    (function typeEffect() {
+      const el = document.getElementById('typeTarget'); const words = ['Results.', 'Impact.', 'Excellence.', 'Growth.']; let wi = 0, ci = 0, del = false;
+      function tick() {
+        const w = words[wi];
+        if (!del) { el.textContent = w.slice(0, ci + 1); ci++; if (ci === w.length) { setTimeout(() => { del = true; tick(); }, 2000); return; } }
+        else { el.textContent = w.slice(0, ci - 1); ci--; if (ci === 0) { del = false; wi = (wi + 1) % words.length; } }
+        setTimeout(tick, del ? 40 : 90);
+      }
+      setTimeout(tick, 1500);
+    })();
+
+    const navbar = document.getElementById('navbar');
+    const hero = document.getElementById('hero');
+    new IntersectionObserver(([e]) => navbar.classList.toggle('scrolled', !e.isIntersecting), { rootMargin: '-80px 0px 0px 0px' }).observe(hero);
+
+    document.getElementById('hamburger').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+    document.querySelectorAll('#navLinks a').forEach(el => el.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open')));
+
+    const ro = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); ro.unobserve(e.target); } }); }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => ro.observe(el));
+
+    (function() {
+      const counters = document.querySelectorAll('[data-count]'); let counted = false;
+      new IntersectionObserver((entries) => { if (entries[0].isIntersecting && !counted) { counted = true; counters.forEach(el => { const target = parseInt(el.dataset.count); let cur = 0; const step = Math.ceil(target / 40); const i = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(i); } el.textContent = cur; }, 30); }); } }, { threshold: 0.5 }).observe(document.querySelector('.about-stats'));
+    })();
+
+    const backBtn = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => backBtn.classList.toggle('visible', window.scrollY > 600));
+    backBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    document.querySelectorAll('.form-group input, .form-group textarea').forEach(el => { el.addEventListener('input', () => el.classList.toggle('filled', el.value.trim() !== '')); });
+  </script>
+</body>
+</html>
