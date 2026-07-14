@@ -1,9 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const jwt = require('jsonwebtoken');
 const connectDB = require('./db');
 const User = require('./models/User');
+const { generateToken, authMiddleware } = require('./middleware/authMiddleware');
+const errorHandler = require('./middleware/errorHandler');
+
+// Route imports
+const listingsRouter = require('./routes/listings');
+const categoriesRouter = require('./routes/categories');
+const favoritesRouter = require('./routes/favorites');
+const usersRouter = require('./routes/users');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,22 +26,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '..', 'public')));
-
-// --- Helpers ---
-function generateToken(user) {
-  return jwt.sign({ id: user._id, email: user.email, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
-}
-
-function authMiddleware(req, res, next) {
-  const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Not authenticated' });
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-}
 
 // Cookie parser (lightweight, no extra dep)
 app.use((req, res, next) => {
@@ -52,7 +43,7 @@ app.use((req, res, next) => {
 // --- Auth Routes ---
 
 // POST /api/auth/signup
-app.post('/api/auth/signup', async (req, res) => {
+app.post('/api/auth/signup', async (req, res, next) => {
   try {
     const { name, email: rawEmail, password } = req.body;
     if (!name || !rawEmail || !password) return res.status(400).json({ error: 'All fields are required' });
@@ -78,13 +69,12 @@ app.post('/api/auth/signup', async (req, res) => {
     });
     res.status(201).json({ user, token });
   } catch (err) {
-    console.error('Signup error:', err);
-    res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 });
 
 // POST /api/auth/login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req, res, next) => {
   try {
     const { email: rawEmail, password } = req.body;
     if (!rawEmail || !password) return res.status(400).json({ error: 'Email and password are required' });
@@ -108,8 +98,7 @@ app.post('/api/auth/login', async (req, res) => {
     });
     res.json({ user, token });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 });
 
@@ -123,6 +112,12 @@ app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logged out' });
 });
+
+// --- API Routers ---
+app.use('/api/listings', listingsRouter);
+app.use('/api/categories', categoriesRouter);
+app.use('/api/favorites', favoritesRouter);
+app.use('/api/users', usersRouter);
 
 // --- Serve HTML pages with proper routes ---
 app.get('/login', (req, res) => {
@@ -144,12 +139,16 @@ app.get('/dashboard', (req, res) => {
   const token = req.cookies?.token;
   if (!token) return res.redirect('/login');
   try {
+    const jwt = require('jsonwebtoken');
     jwt.verify(token, JWT_SECRET);
     res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
   } catch {
     res.redirect('/login');
   }
 });
+
+// --- Centralized error handler (must be last) ---
+app.use(errorHandler);
 
 // --- Start ---
 async function start() {
