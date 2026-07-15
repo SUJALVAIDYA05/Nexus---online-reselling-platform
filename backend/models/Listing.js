@@ -26,7 +26,13 @@ const listingSchema = new mongoose.Schema(
       enum: ['new', 'like-new', 'good', 'fair', 'poor'],
     },
     images: {
-      type: [String],
+      type: [
+        {
+          url: { type: String, required: true },
+          publicId: { type: String, required: true },
+          _id: false,
+        },
+      ],
       default: [],
     },
     location: {
