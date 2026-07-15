@@ -11,6 +11,7 @@ const listingsRouter = require('./routes/listings');
 const categoriesRouter = require('./routes/categories');
 const favoritesRouter = require('./routes/favorites');
 const usersRouter = require('./routes/users');
+const uploadsRouter = require('./routes/uploads');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -118,6 +119,7 @@ app.use('/api/listings', listingsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/favorites', favoritesRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/uploads', uploadsRouter);
 
 // --- Serve HTML pages with proper routes ---
 app.get('/login', (req, res) => {

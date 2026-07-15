@@ -1,8 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const Listing = require('../models/Listing');
+const cloudinary = require('../config/cloudinary');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const validateObjectId = require('../middleware/validateObjectId');
+
+// ---------------------------------------------------------------------------
+// Helper — delete images from Cloudinary (fire-and-forget)
+// ---------------------------------------------------------------------------
+function destroyImages(images) {
+  if (!images || images.length === 0) return;
+  for (const img of images) {
+    cloudinary.uploader.destroy(img.publicId).catch((err) => {
+      console.error(`Failed to delete Cloudinary image ${img.publicId}:`, err.message);
+    });
+  }
+}
 
 // ---------------------------------------------------------------------------
 // GET /api/listings — list active listings with filters & pagination
@@ -148,6 +161,15 @@ router.put('/:id', authMiddleware, validateObjectId('id'), async (req, res, next
       return res.status(400).json({ error: 'Description cannot be empty' });
     }
 
+    // Clean up orphaned images on Cloudinary when images change
+    if (updates.images) {
+      const newPublicIds = new Set(updates.images.map((img) => img.publicId));
+      const removedImages = listing.images.filter(
+        (img) => !newPublicIds.has(img.publicId)
+      );
+      destroyImages(removedImages);
+    }
+
     const updated = await Listing.findByIdAndUpdate(
       req.params.id,
       { $set: updates },
@@ -176,6 +198,9 @@ router.delete('/:id', authMiddleware, validateObjectId('id'), async (req, res, n
 
     listing.status = 'removed';
     await listing.save();
+
+    // Clean up images on Cloudinary (fire-and-forget)
+    destroyImages(listing.images);
 
     res.json({ message: 'Listing removed' });
   } catch (err) {
