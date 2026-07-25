@@ -28,6 +28,7 @@ router.get('/', async (req, res, next) => {
       minPrice,
       maxPrice,
       q,
+      sort,
       page = 1,
       limit = 20,
     } = req.query;
@@ -42,37 +43,89 @@ router.get('/', async (req, res, next) => {
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
 
-    // Text search stub — simple regex on title + description for now.
-    // Will be replaced with MongoDB Atlas text search in Phase 5.
+    // Full-text search using MongoDB text index (ranked by relevance).
+    // Falls back to regex if text index is unavailable.
+    let useTextSearch = false;
     if (q) {
-      filter.$or = [
-        { title: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
-      ];
+      filter.$text = { $search: q };
+      useTextSearch = true;
     }
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
     const skip = (pageNum - 1) * limitNum;
 
-    const [listings, total] = await Promise.all([
-      Listing.find(filter)
-        .populate('category', 'name slug')
-        .populate('seller', 'name avatarUrl')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Listing.countDocuments(filter),
-    ]);
+    // Determine sort order — text-relevance when searching, else by query param
+    let sortOrder;
+    if (sort === 'price_asc') {
+      sortOrder = { price: 1 };
+    } else if (sort === 'price_desc') {
+      sortOrder = { price: -1 };
+    } else if (useTextSearch) {
+      // Relevance sort (default when text search is active)
+      sortOrder = { score: { $meta: 'textScore' }, createdAt: -1 };
+    } else {
+      sortOrder = { createdAt: -1 };
+    }
 
-    res.json({
-      listings,
-      page: pageNum,
-      limit: limitNum,
-      total,
-      totalPages: Math.ceil(total / limitNum),
-    });
+    // Build the query — include textScore projection when doing text search
+    let query = Listing.find(filter);
+    if (useTextSearch) {
+      query = query.select({ score: { $meta: 'textScore' } });
+    }
+
+    try {
+      const [listings, total] = await Promise.all([
+        query
+          .populate('category', 'name slug')
+          .populate('seller', 'name avatarUrl')
+          .sort(sortOrder)
+          .skip(skip)
+          .limit(limitNum)
+          .lean(),
+        Listing.countDocuments(filter),
+      ]);
+
+      res.json({
+        listings,
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      });
+    } catch (textErr) {
+      // Fallback: if $text fails (no text index yet), use regex search instead
+      if (useTextSearch && textErr.code === 27) {
+        delete filter.$text;
+        filter.$or = [
+          { title: { $regex: q, $options: 'i' } },
+          { description: { $regex: q, $options: 'i' } },
+        ];
+        const fallbackSort = sort === 'price_asc' ? { price: 1 }
+          : sort === 'price_desc' ? { price: -1 }
+          : { createdAt: -1 };
+
+        const [listings, total] = await Promise.all([
+          Listing.find(filter)
+            .populate('category', 'name slug')
+            .populate('seller', 'name avatarUrl')
+            .sort(fallbackSort)
+            .skip(skip)
+            .limit(limitNum)
+            .lean(),
+          Listing.countDocuments(filter),
+        ]);
+
+        return res.json({
+          listings,
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum),
+        });
+      }
+      throw textErr;
+    }
   } catch (err) {
     next(err);
   }

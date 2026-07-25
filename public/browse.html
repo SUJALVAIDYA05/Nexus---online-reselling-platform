@@ -336,6 +336,7 @@
               <label for="sortSelect">Sort by:</label>
               <select id="sortSelect" class="sort-select">
                 <option value="newest">Newest First</option>
+                <option value="relevance">Relevance</option>
                 <option value="price_asc">Price: Low to High</option>
                 <option value="price_desc">Price: High to Low</option>
               </select>
@@ -621,8 +622,16 @@
       
       const conditionBoxes = Array.from(document.querySelectorAll('input[name="condition"]:checked')).map(cb => cb.value);
 
+      // Auto-switch to relevance sort when searching, back to newest when cleared
+      const searchQuery = els.heroInput.value.trim();
+      if (searchQuery && els.sortSelect.value === 'newest') {
+        els.sortSelect.value = 'relevance';
+      } else if (!searchQuery && els.sortSelect.value === 'relevance') {
+        els.sortSelect.value = 'newest';
+      }
+
       const params = {
-        q: els.heroInput.value,
+        q: searchQuery,
         category: els.catSelect.value,
         minPrice: document.getElementById('filterMinPrice').value,
         maxPrice: document.getElementById('filterMaxPrice').value,
@@ -653,6 +662,15 @@
       els.heroSearchForm.reset();
       els.sortSelect.value = 'newest';
       applyFilters();
+    });
+
+    // Debounced search-as-you-type (300ms)
+    let searchDebounceTimer = null;
+    els.heroInput.addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        applyFilters();
+      }, 300);
     });
 
     // Mobile Sidebar Toggle
