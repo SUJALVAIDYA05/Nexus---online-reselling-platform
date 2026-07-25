@@ -119,6 +119,28 @@
     .hamburger span { width: 26px; height: 2.5px; background: var(--clr-white); border-radius: 4px; transition: var(--transition); }
     .navbar.scrolled .hamburger span { background: var(--clr-primary); }
 
+    /* Auth visibility & user menu */
+    [data-auth="user"] { display: none; }
+    .nav-user-menu { position: relative; }
+    .user-nav-avatar { width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--clr-accent), #0f3460); color: #fff;
+      font-weight: 700; font-size: .9rem; border: 2px solid rgba(255,255,255,.3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-family: inherit; transition: all .2s ease; }
+    .user-nav-avatar:hover { border-color: #fff; transform: scale(1.08); }
+    .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; min-width: 180px;
+      background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: all .25s ease; overflow: hidden; z-index: 50; }
+    .nav-user-menu:hover .nav-dropdown,
+    .nav-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-dropdown a, .nav-dropdown button { display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; color: var(--clr-text); text-decoration: none; font-size: .9rem;
+      font-weight: 500; border: none; background: none; width: 100%; cursor: pointer;
+      font-family: inherit; transition: background .15s ease; text-align: left; }
+    .nav-dropdown a:hover, .nav-dropdown button:hover { background: var(--clr-light); color: var(--clr-accent); }
+    .nav-fav-link { font-size: 1.05rem; }
+
     /* ===== HERO ===== */
     .hero {
       min-height: 100vh;
@@ -368,6 +390,11 @@
       .hero-card { padding: 1.5rem; }
       .floating-badge { display: none; }
       .about-stats { grid-template-columns: 1fr 1fr; }
+      .nav-user-menu { width: 100%; }
+      .nav-dropdown { position: static; opacity: 1; visibility: visible; transform: none;
+        box-shadow: none; background: rgba(255,255,255,.08); border-radius: 8px; margin-top: 8px; }
+      .nav-dropdown a, .nav-dropdown button { color: var(--clr-text); }
+      .nav-dropdown a:hover, .nav-dropdown button:hover { background: rgba(255,255,255,.1); color: var(--clr-accent); }
     }
     @media (max-width: 480px) {
       .services-grid { grid-template-columns: 1fr; }
@@ -385,11 +412,21 @@
     <div class="container">
       <a href="/" class="logo">Nexus<span>.</span></a>
       <ul class="nav-links" id="navLinks">
+        <li><a href="/browse">Browse</a></li>
         <li><a href="/services">Services</a></li>
         <li><a href="/about">About</a></li>
-        <li><a href="/testimonials">Testimonials</a></li>
-        <li><a href="/login" class="btn-link">Sign In</a></li>
-        <li><a href="/signup" class="nav-cta">Get Started</a></li>
+        <li data-auth="guest"><a href="/login" class="btn-link">Sign In</a></li>
+        <li data-auth="guest"><a href="/signup" class="nav-cta">Get Started</a></li>
+        <li data-auth="user"><a href="/create-listing" class="nav-cta"><i class="fas fa-plus"></i> Post Ad</a></li>
+        <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+        <li data-auth="user"><a href="/favorites" class="nav-fav-link"><i class="fas fa-heart"></i></a></li>
+        <li data-auth="user" class="nav-user-menu">
+          <button class="user-nav-avatar" id="navAvatar" aria-label="User menu"></button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </li>
       </ul>
       <button class="hamburger" id="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -407,6 +444,10 @@
           <a href="/signup" class="btn btn-primary">Get Started <i class="fas fa-arrow-right"></i></a>
           <a href="/#services" class="btn btn-outline">Our Services</a>
         </div>
+        <form class="hero-search" action="/browse" method="GET" style="margin-top: 2rem; display: flex; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 50px; backdrop-filter: blur(10px);">
+          <input type="text" name="q" placeholder="Search for items..." style="flex: 1; border: none; background: transparent; color: white; padding: 0.5rem 1.5rem; outline: none; font-size: 1rem;" />
+          <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.5rem; border-radius: 50px;"><i class="fas fa-search"></i></button>
+        </form>
       </div>
       <div class="hero-visual">
         <div class="hero-card">
@@ -520,6 +561,78 @@
     </div>
   </footer>
 
+  <script src="/js/api.js"></script>
+  <script src="/js/listingCard.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    window.addEventListener('authReady', async () => {
+      try {
+        const res = await window.api.get('/api/listings?limit=8');
+        const listings = res.listings || [];
+        
+        let favoriteIds = new Set();
+        if (window.currentUser) {
+          const favRes = await window.api.get('/api/favorites');
+          if (favRes && Array.isArray(favRes)) {
+            favRes.forEach(f => {
+              if (f.listing && f.listing._id) favoriteIds.add(f.listing._id);
+            });
+          }
+        }
+
+        const grid = document.getElementById('featuredListingsGrid');
+        if(grid) {
+            grid.innerHTML = '';
+            listings.forEach(listing => {
+              const card = window.renderListingCard(listing, {
+                showStatus: false,
+                showActions: false,
+                favoriteIds: favoriteIds
+              });
+              grid.appendChild(card);
+            });
+        }
+      } catch (err) {
+        console.error('Failed to load featured listings:', err);
+      }
+    });
+  </script>
+  <script src="/js/api.js"></script>
+  <script src="/js/listingCard.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    window.addEventListener('authReady', async () => {
+      try {
+        const res = await window.api.get('/api/listings?limit=8');
+        const listings = res.listings || [];
+        
+        let favoriteIds = new Set();
+        if (window.currentUser) {
+          const favRes = await window.api.get('/api/favorites');
+          if (favRes && Array.isArray(favRes)) {
+            favRes.forEach(f => {
+              if (f.listing && f.listing._id) favoriteIds.add(f.listing._id);
+            });
+          }
+        }
+
+        const grid = document.getElementById('featuredListingsGrid');
+        if(grid) {
+            grid.innerHTML = '';
+            listings.forEach(listing => {
+              const card = window.renderListingCard(listing, {
+                showStatus: false,
+                showActions: false,
+                favoriteIds: favoriteIds
+              });
+              grid.appendChild(card);
+            });
+        }
+      } catch (err) {
+        console.error('Failed to load featured listings:', err);
+      }
+    });
+  </script>
   <script>
     window.addEventListener('load', () => document.getElementById('preloader').classList.add('hidden'));
 

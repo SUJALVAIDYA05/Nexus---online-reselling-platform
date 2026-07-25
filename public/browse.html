@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Listings — Nexus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --clr-primary: #1a1a2e;
+      --clr-accent:  #e94560;
+      --clr-accent2: #0f3460;
+      --clr-dark:    #16213e;
+      --clr-light:   #f8f9fa;
+      --clr-text:    #4a4a5a;
+      --clr-white:   #ffffff;
+      --radius:      16px;
+      --shadow:      0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg:   0 12px 48px rgba(0,0,0,.12);
+      --transition:  0.3s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ---------- Global ---------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; color: var(--clr-text); line-height: 1.6; background: #f8f9fa; overflow-x: hidden; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; }
+
+    /* ---------- Preloader ---------- */
+    #preloader { position: fixed; inset: 0; background: var(--clr-primary); display: flex;
+      align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s ease; }
+    #preloader.hidden { opacity: 0; pointer-events: none; }
+    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,.1);
+      border-top-color: var(--clr-accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Back to Top ---------- */
+    #backToTop { position: fixed; bottom: 32px; right: 32px; width: 44px; height: 44px;
+      border-radius: 50%; background: var(--clr-accent); color: #fff; border: none;
+      cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transform: translateY(20px); transition: all .3s ease; z-index: 100; }
+    #backToTop.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    #backToTop:hover { background: #d63d56; transform: translateY(-3px); }
+
+    /* ---------- Scroll Reveal ---------- */
+    .reveal, .reveal-left, .reveal-right, .reveal-scale { opacity: 0; transform: translateY(40px); transition: all .8s cubic-bezier(.4,0,.2,1); }
+    .reveal-left { transform: translateX(-40px); }
+    .reveal-right { transform: translateX(40px); }
+    .reveal-scale { transform: scale(.9); }
+    .reveal.visible, .reveal-left.visible, .reveal-right.visible, .reveal-scale.visible { opacity: 1; transform: none; }
+
+    /* ---------- Navbar ---------- */
+    .navbar { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      padding: 18px 0; transition: var(--transition); background: transparent; }
+    .navbar.scrolled { background: rgba(26,26,46,.92); backdrop-filter: blur(14px);
+      padding: 12px 0; box-shadow: 0 4px 30px rgba(0,0,0,.15); }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: #fff; text-decoration: none; }
+    .logo span { color: var(--clr-accent); }
+    .nav-links { list-style: none; display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: rgba(255,255,255,.8); text-decoration: none; font-weight: 500; font-size: .95rem;
+      transition: color var(--transition); }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .btn-link { color: rgba(255,255,255,.9) !important; }
+    .nav-cta { background: var(--clr-accent); color: #fff !important; padding: 10px 22px;
+      border-radius: 50px; font-weight: 600 !important; transition: all var(--transition); display:inline-flex;align-items:center;gap:6px; }
+    .nav-cta:hover { background: #d63d56; transform: translateY(-2px); }
+    .nav-fav-link { font-size: 1.05rem; }
+
+    /* User avatar dropdown */
+    .nav-user-menu { position: relative; }
+    .user-nav-avatar { width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--clr-accent), #0f3460); color: #fff;
+      font-weight: 700; font-size: .9rem; border: 2px solid rgba(255,255,255,.3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-family: inherit; transition: all .2s ease; }
+    .user-nav-avatar:hover { border-color: #fff; transform: scale(1.08); }
+    .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; min-width: 180px;
+      background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: all .25s ease; overflow: hidden; z-index: 50; }
+    .nav-user-menu:hover .nav-dropdown,
+    .nav-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-dropdown a, .nav-dropdown button { display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; color: var(--clr-text); text-decoration: none; font-size: .9rem;
+      font-weight: 500; border: none; background: none; width: 100%; cursor: pointer;
+      font-family: inherit; transition: background .15s ease; }
+    .nav-dropdown a:hover, .nav-dropdown button:hover { background: var(--clr-light); color: var(--clr-accent); }
+    
+    [data-auth="user"] { display: none; }
+    
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: #fff;
+      margin: 5px 0; border-radius: 2px; transition: var(--transition); }
+
+    @media (max-width: 868px) {
+      .hamburger { display: block; }
+      .nav-links { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh;
+        background: var(--clr-primary); flex-direction: column; padding: 80px 32px 32px;
+        gap: 20px; transition: right .35s ease; z-index: 999; }
+      .nav-links.open { right: 0; }
+      .nav-user-menu { width: 100%; }
+      .nav-dropdown { position: static; opacity: 1; visibility: visible; transform: none;
+        box-shadow: none; background: rgba(255,255,255,.08); border-radius: 8px; margin-top: 8px; }
+      .nav-dropdown a, .nav-dropdown button { color: rgba(255,255,255,.8); }
+      .nav-dropdown a:hover, .nav-dropdown button:hover { background: rgba(255,255,255,.1); color: #fff; }
+    }
+
+    /* ---------- Page Header / Search ---------- */
+    .page-header { min-height: 45vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; background: linear-gradient(135deg, var(--clr-primary), var(--clr-dark), var(--clr-accent2));
+      color: #fff; position: relative; overflow: hidden; padding: 120px 24px 60px; }
+    .page-header::before { content: ''; position: absolute; width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(233,69,96,.15), transparent 70%);
+      top: -150px; right: -100px; pointer-events: none; }
+    .page-header-content { position: relative; z-index: 2; width: 100%; max-width: 700px; margin: 0 auto; }
+    .page-header h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; margin-bottom: 30px; line-height: 1.2; }
+    .page-header h1 span { color: var(--clr-accent); }
+    
+    .hero-search { position: relative; display: flex; align-items: center; background: #fff; border-radius: 50px; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
+    .hero-search input { flex: 1; border: none; background: none; padding: 16px 24px; font-size: 1.1rem; color: var(--clr-primary); font-family: inherit; outline: none; }
+    .hero-search button { background: var(--clr-accent); color: #fff; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; transition: all .3s ease; display: grid; place-items: center; }
+    .hero-search button:hover { background: #d63d56; transform: scale(1.05); }
+
+    /* ---------- Browse Layout ---------- */
+    .browse-section { padding: 50px 0 80px; }
+    .browse-layout { display: flex; gap: 32px; align-items: flex-start; }
+    
+    /* Left Sidebar */
+    .filter-sidebar { width: 280px; flex-shrink: 0; background: #fff; border-radius: var(--radius); padding: 28px 24px; box-shadow: var(--shadow); position: sticky; top: 100px; }
+    .filter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .filter-header h3 { font-size: 1.2rem; color: var(--clr-primary); }
+    .filter-clear { font-size: .85rem; color: var(--clr-accent); background: none; border: none; cursor: pointer; font-weight: 500; }
+    .filter-clear:hover { text-decoration: underline; }
+    
+    .filter-group { margin-bottom: 24px; }
+    .filter-label { display: block; font-size: .9rem; font-weight: 600; color: var(--clr-primary); margin-bottom: 12px; }
+    
+    .filter-input, .filter-select { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: .95rem; color: var(--clr-text); background: #f8fafc; transition: all .2s ease; outline: none; }
+    .filter-input:focus, .filter-select:focus { border-color: var(--clr-accent); background: #fff; box-shadow: 0 2px 10px rgba(233,69,96,.1); }
+    
+    .price-range { display: flex; align-items: center; gap: 12px; }
+    .price-range span { color: #94a3b8; font-size: .9rem; }
+    
+    .checkbox-list { display: flex; flex-direction: column; gap: 10px; }
+    .checkbox-item { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: .95rem; color: var(--clr-text); }
+    .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; border-radius: 4px; accent-color: var(--clr-accent); cursor: pointer; }
+    
+    .btn-apply { width: 100%; background: var(--clr-primary); color: #fff; border: none; padding: 14px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .3s ease; margin-top: 10px; }
+    .btn-apply:hover { background: var(--clr-accent); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(233,69,96,.3); }
+
+    .mobile-filter-btn { display: none; width: 100%; padding: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; font-weight: 600; color: var(--clr-primary); margin-bottom: 20px; text-align: center; cursor: pointer; }
+    .mobile-filter-btn i { margin-right: 8px; }
+
+    /* Right Content */
+    .browse-content { flex: 1; min-width: 0; }
+    .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .results-count { font-size: 1.05rem; font-weight: 500; color: var(--clr-primary); }
+    
+    .sort-wrap { display: flex; align-items: center; gap: 12px; }
+    .sort-wrap label { font-size: .9rem; font-weight: 600; color: var(--clr-primary); }
+    .sort-select { padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: .9rem; background: #fff; outline: none; cursor: pointer; }
+    .sort-select:focus { border-color: var(--clr-accent); }
+
+    /* Skeleton Loading */
+    .skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 24px; display: none; }
+    .skeleton-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
+    .skeleton-img { width: 100%; padding-top: 66.67%; background: #e2e8f0; position: relative; overflow: hidden; }
+    .skeleton-body { padding: 16px 18px; }
+    .skeleton-line { height: 14px; background: #e2e8f0; border-radius: 4px; margin-bottom: 12px; position: relative; overflow: hidden; }
+    .skeleton-line.w-70 { width: 70%; }
+    .skeleton-line.h-20 { height: 20px; margin-bottom: 16px; }
+    .skeleton-line::after, .skeleton-img::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.4) 20%, rgba(255, 255, 255, 0.7) 60%, rgba(255, 255, 255, 0)); animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 20px; display: none; background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .empty-state i { font-size: 3rem; color: #cbd5e1; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 1.3rem; color: var(--clr-primary); margin-bottom: 8px; }
+    .empty-state p { color: #64748b; font-size: .95rem; margin-bottom: 24px; }
+    .empty-state button { display: inline-block; }
+
+    /* Pagination */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 40px; }
+    .page-btn { min-width: 40px; height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; color: var(--clr-text); font-weight: 500; font-family: inherit; cursor: pointer; transition: all .2s ease; display: grid; place-items: center; }
+    .page-btn:hover:not(:disabled) { border-color: var(--clr-accent); color: var(--clr-accent); }
+    .page-btn.active { background: var(--clr-accent); color: #fff; border-color: var(--clr-accent); }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 992px) {
+      .browse-layout { flex-direction: column; }
+      .mobile-filter-btn { display: block; }
+      .filter-sidebar { position: fixed; top: 0; left: -100%; width: 300px; height: 100vh; z-index: 1001; border-radius: 0; overflow-y: auto; transition: left .3s ease; }
+      .filter-sidebar.open { left: 0; }
+      .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; display: none; opacity: 0; transition: opacity .3s ease; }
+      .sidebar-overlay.open { display: block; opacity: 1; }
+      .filter-header { position: sticky; top: 0; background: #fff; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; z-index: 2; margin-top: -8px; padding-top: 10px; }
+      .close-sidebar { display: block; background: none; border: none; font-size: 1.4rem; color: var(--clr-primary); cursor: pointer; }
+    }
+    .close-sidebar { display: none; }
+
+    /* ---------- Footer ---------- */
+    footer { background: var(--clr-primary); color: rgba(255,255,255,.7); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+    .footer-brand p { margin: 16px 0; font-size: .9rem; line-height: 1.7; }
+    .footer-social { display: flex; gap: 12px; }
+    .footer-social a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6);
+      transition: all var(--transition); }
+    .footer-social a:hover { background: var(--clr-accent); border-color: var(--clr-accent); color: #fff; }
+    footer h4 { color: #fff; margin-bottom: 20px; font-size: 1rem; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 10px; }
+    footer ul a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem;
+      transition: color var(--transition); }
+    footer ul a:hover { color: var(--clr-accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); margin-top: 40px;
+      padding: 20px 0; display: flex; justify-content: space-between; font-size: .85rem; }
+    .footer-bottom .fa-heart { color: var(--clr-accent); }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- Preloader -->
+  <div id="preloader"><div class="loader-ring"></div></div>
+  <!-- Back-to-top -->
+  <button id="backToTop" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">Nexus<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/browse" class="active">Browse</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/about">About</a></li>
+        <li data-auth="guest"><a href="/login" class="btn-link">Sign In</a></li>
+        <li data-auth="guest"><a href="/signup" class="nav-cta">Get Started</a></li>
+        <li data-auth="user"><a href="/create-listing" class="nav-cta"><i class="fas fa-plus"></i> Post Ad</a></li>
+        <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+        <li data-auth="user"><a href="/favorites" class="nav-fav-link"><i class="fas fa-heart"></i></a></li>
+        <li data-auth="user" class="nav-user-menu">
+          <button class="user-nav-avatar" id="navAvatar" aria-label="User menu"></button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="page-header-content reveal-scale">
+      <h1>Find Your Next <span>Treasure</span></h1>
+      <form id="heroSearchForm" class="hero-search">
+        <input type="text" id="heroSearchInput" placeholder="What are you looking for?" aria-label="Search">
+        <button type="submit" aria-label="Search"><i class="fas fa-search"></i></button>
+      </form>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Browse Section -->
+  <section class="browse-section">
+    <div class="container">
+      
+      <button class="mobile-filter-btn" id="mobileFilterBtn"><i class="fas fa-filter"></i> Filters & Sort</button>
+
+      <div class="browse-layout">
+        
+        <!-- Sidebar Filters -->
+        <aside class="filter-sidebar" id="filterSidebar">
+          <div class="filter-header">
+            <h3>Filters</h3>
+            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+            <button class="filter-clear" id="clearFiltersBtn">Clear All</button>
+          </div>
+
+          <form id="filterForm">
+            <div class="filter-group">
+              <label class="filter-label">Category</label>
+              <select id="filterCategory" class="filter-select">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Price Range (₹)</label>
+              <div class="price-range">
+                <input type="number" id="filterMinPrice" class="filter-input" placeholder="Min" min="0">
+                <span>-</span>
+                <input type="number" id="filterMaxPrice" class="filter-input" placeholder="Max" min="0">
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Location</label>
+              <input type="text" id="filterLocation" class="filter-input" placeholder="City or area">
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Condition</label>
+              <div class="checkbox-list">
+                <label class="checkbox-item"><input type="checkbox" name="condition" value="new"> New</label>
+                <label class="checkbox-item"><input type="checkbox" name="condition" value="like-new"> Like New</label>
+                <label class="checkbox-item"><input type="checkbox" name="condition" value="good"> Good</label>
+                <label class="checkbox-item"><input type="checkbox" name="condition" value="fair"> Fair</label>
+                <label class="checkbox-item"><input type="checkbox" name="condition" value="poor"> Poor</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-apply">Apply Filters</button>
+          </form>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="browse-content">
+          
+          <div class="content-header">
+            <div class="results-count" id="resultsCount">Loading listings...</div>
+            <div class="sort-wrap">
+              <label for="sortSelect">Sort by:</label>
+              <select id="sortSelect" class="sort-select">
+                <option value="newest">Newest First</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Skeleton Loading Grid -->
+          <div class="skeleton-grid" id="skeletonGrid">
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line h-20"></div><div class="skeleton-line w-70"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line h-20"></div><div class="skeleton-line w-70"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line h-20"></div><div class="skeleton-line w-70"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line h-20"></div><div class="skeleton-line w-70"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line h-20"></div><div class="skeleton-line w-70"></div><div class="skeleton-line"></div></div></div>
+            <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line h-20"></div><div class="skeleton-line w-70"></div><div class="skeleton-line"></div></div></div>
+          </div>
+
+          <!-- Listings Grid -->
+          <div class="listing-grid" id="listingsGrid"></div>
+
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState">
+            <i class="fas fa-box-open"></i>
+            <h3>No listings found</h3>
+            <p>Try adjusting your filters or search terms.</p>
+            <button class="nav-cta" onclick="document.getElementById('clearFiltersBtn').click()">Clear Filters</button>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination" id="pagination"></div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">Nexus<span>.</span></a>
+          <p>Your trusted marketplace for buying and selling pre-owned goods. Find great deals or turn your unused items into cash.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Dribbble"><i class="fab fa-dribbble"></i></a>
+          </div>
+        </div>
+        <div><h4>Marketplace</h4><ul><li><a href="/browse">Browse Listings</a></li><li><a href="/create-listing">Post an Ad</a></li><li><a href="/favorites">My Favorites</a></li></ul></div>
+        <div><h4>Company</h4><ul><li><a href="/about">About Us</a></li><li><a href="/services">Services</a></li><li><a href="/testimonials">Testimonials</a></li></ul></div>
+        <div><h4>Support</h4><ul><li><a href="#">Contact</a></li><li><a href="#">FAQ</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nexus. All rights reserved.</p>
+        <p>Made with <i class="fas fa-heart"></i> in India</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/listingCard.js"></script>
+  
+  <script>
+    // ----- Page Initializers (Utilities) -----
+    window.addEventListener('load', () => { const p = document.getElementById('preloader'); if(p) p.classList.add('hidden'); });
+
+    const heroObs = document.querySelector('.page-header');
+    if (heroObs) { new IntersectionObserver(([e]) => document.getElementById('navbar').classList.toggle('scrolled', !e.isIntersecting), { threshold: 0.1 }).observe(heroObs); }
+    else { document.getElementById('navbar').classList.add('scrolled'); }
+
+    document.getElementById('hamburger')?.addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+
+    const revealObs = new IntersectionObserver((entries) => entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } }), { threshold: 0.1 });
+    document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').forEach(el => revealObs.observe(el));
+
+    const btt = document.getElementById('backToTop');
+    if (btt) {
+      window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 600));
+      btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+
+    // ----- Browse Logic -----
+    const state = {
+      page: 1,
+      limit: 12,
+      totalPages: 1,
+      favoriteIds: new Set()
+    };
+
+    const els = {
+      form: document.getElementById('filterForm'),
+      heroSearchForm: document.getElementById('heroSearchForm'),
+      heroInput: document.getElementById('heroSearchInput'),
+      grid: document.getElementById('listingsGrid'),
+      skeleton: document.getElementById('skeletonGrid'),
+      empty: document.getElementById('emptyState'),
+      count: document.getElementById('resultsCount'),
+      pagination: document.getElementById('pagination'),
+      catSelect: document.getElementById('filterCategory'),
+      sortSelect: document.getElementById('sortSelect'),
+      clearBtn: document.getElementById('clearFiltersBtn'),
+      // Mobile sidebar elements
+      mobileBtn: document.getElementById('mobileFilterBtn'),
+      sidebar: document.getElementById('filterSidebar'),
+      overlay: document.getElementById('sidebarOverlay'),
+      closeSidebar: document.getElementById('closeSidebar')
+    };
+
+    // Parse URL params
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        q: params.get('q') || '',
+        category: params.get('category') || '',
+        minPrice: params.get('minPrice') || '',
+        maxPrice: params.get('maxPrice') || '',
+        location: params.get('location') || '',
+        condition: params.getAll('condition') || [],
+        sort: params.get('sort') || 'newest',
+        page: parseInt(params.get('page')) || 1
+      };
+    }
+
+    // Update URL without reload
+    function updateURLParams(params) {
+      const url = new URL(window.location);
+      url.search = '';
+      for (const [key, val] of Object.entries(params)) {
+        if (Array.isArray(val)) {
+          val.forEach(v => v && url.searchParams.append(key, v));
+        } else if (val) {
+          url.searchParams.set(key, val);
+        }
+      }
+      window.history.pushState({}, '', url);
+    }
+
+    // Sync form inputs from parsed params
+    function syncFormWithParams(p) {
+      els.heroInput.value = p.q;
+      els.catSelect.value = p.category;
+      document.getElementById('filterMinPrice').value = p.minPrice;
+      document.getElementById('filterMaxPrice').value = p.maxPrice;
+      document.getElementById('filterLocation').value = p.location;
+      els.sortSelect.value = p.sort;
+      
+      document.querySelectorAll('input[name="condition"]').forEach(cb => {
+        cb.checked = p.condition.includes(cb.value);
+      });
+      state.page = p.page;
+    }
+
+    // Fetch Categories
+    async function loadCategories() {
+      try {
+        const cats = await window.api.get('/api/categories');
+        cats.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c._id;
+          opt.textContent = c.name;
+          els.catSelect.appendChild(opt);
+        });
+        // re-sync incase it loaded after params sync
+        const p = getQueryParams();
+        els.catSelect.value = p.category;
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    }
+
+    // Fetch Favorites
+    async function loadFavorites() {
+      if (!window.currentUser) return;
+      try {
+        const favs = await window.api.get('/api/favorites');
+        state.favoriteIds = new Set(favs.map(f => f.listing ? (f.listing._id || f.listing) : f.listingId));
+      } catch (err) {
+        console.error('Failed to load favorites', err);
+      }
+    }
+
+    // Main fetch listings
+    async function fetchListings() {
+      els.grid.style.display = 'none';
+      els.empty.style.display = 'none';
+      els.skeleton.style.display = 'grid';
+      els.pagination.innerHTML = '';
+      
+      const p = getQueryParams();
+      let queryStr = `?page=${p.page}&limit=${state.limit}`;
+      if (p.q) queryStr += `&q=${encodeURIComponent(p.q)}`;
+      if (p.category) queryStr += `&category=${p.category}`;
+      if (p.minPrice) queryStr += `&minPrice=${p.minPrice}`;
+      if (p.maxPrice) queryStr += `&maxPrice=${p.maxPrice}`;
+      if (p.location) queryStr += `&location=${encodeURIComponent(p.location)}`;
+      if (p.sort) queryStr += `&sort=${p.sort}`;
+      p.condition.forEach(c => queryStr += `&condition=${c}`);
+
+      try {
+        const res = await window.api.get('/api/listings' + queryStr);
+        renderListings(res);
+      } catch (err) {
+        console.error('Error fetching listings', err);
+        els.count.textContent = 'Error loading listings.';
+        els.skeleton.style.display = 'none';
+        els.empty.style.display = 'block';
+      }
+    }
+
+    // Render results
+    function renderListings(data) {
+      els.skeleton.style.display = 'none';
+      els.grid.innerHTML = '';
+      state.totalPages = data.totalPages || 1;
+
+      if (!data.listings || data.listings.length === 0) {
+        els.count.textContent = '0 listings found';
+        els.empty.style.display = 'block';
+        return;
+      }
+
+      els.count.textContent = `Showing ${data.listings.length} of ${data.total || data.listings.length} listings`;
+      els.grid.style.display = 'grid';
+
+      data.listings.forEach(listing => {
+        const card = window.renderListingCard(listing, {
+          favoriteIds: state.favoriteIds,
+          showStatus: false // Hide status on browse page (assume all are active, backend handles it)
+        });
+        els.grid.appendChild(card);
+      });
+
+      renderPagination();
+    }
+
+    // Pagination
+    function renderPagination() {
+      els.pagination.innerHTML = '';
+      if (state.totalPages <= 1) return;
+      
+      const p = getQueryParams();
+
+      // Prev
+      const prev = document.createElement('button');
+      prev.className = 'page-btn';
+      prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+      prev.disabled = p.page <= 1;
+      prev.onclick = () => goToPage(p.page - 1);
+      els.pagination.appendChild(prev);
+
+      // Pages (simplified)
+      for (let i = 1; i <= state.totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = `page-btn ${i === p.page ? 'active' : ''}`;
+        btn.textContent = i;
+        btn.onclick = () => goToPage(i);
+        els.pagination.appendChild(btn);
+      }
+
+      // Next
+      const next = document.createElement('button');
+      next.className = 'page-btn';
+      next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+      next.disabled = p.page >= state.totalPages;
+      next.onclick = () => goToPage(p.page + 1);
+      els.pagination.appendChild(next);
+    }
+
+    function goToPage(n) {
+      const p = getQueryParams();
+      p.page = n;
+      updateURLParams(p);
+      fetchListings();
+      window.scrollTo({ top: document.querySelector('.browse-section').offsetTop - 100, behavior: 'smooth' });
+    }
+
+    // Handlers
+    function applyFilters(e) {
+      if (e) e.preventDefault();
+      
+      const conditionBoxes = Array.from(document.querySelectorAll('input[name="condition"]:checked')).map(cb => cb.value);
+
+      const params = {
+        q: els.heroInput.value,
+        category: els.catSelect.value,
+        minPrice: document.getElementById('filterMinPrice').value,
+        maxPrice: document.getElementById('filterMaxPrice').value,
+        location: document.getElementById('filterLocation').value,
+        condition: conditionBoxes,
+        sort: els.sortSelect.value,
+        page: 1 // Reset to 1 on filter
+      };
+
+      updateURLParams(params);
+      fetchListings();
+      closeMobileSidebar();
+    }
+
+    els.form.addEventListener('submit', applyFilters);
+    els.heroSearchForm.addEventListener('submit', applyFilters);
+    
+    els.sortSelect.addEventListener('change', () => {
+      const p = getQueryParams();
+      p.sort = els.sortSelect.value;
+      p.page = 1;
+      updateURLParams(p);
+      fetchListings();
+    });
+
+    els.clearBtn.addEventListener('click', () => {
+      els.form.reset();
+      els.heroSearchForm.reset();
+      els.sortSelect.value = 'newest';
+      applyFilters();
+    });
+
+    // Mobile Sidebar Toggle
+    function openMobileSidebar() {
+      els.sidebar.classList.add('open');
+      els.overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileSidebar() {
+      els.sidebar.classList.remove('open');
+      els.overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    els.mobileBtn.addEventListener('click', openMobileSidebar);
+    els.closeSidebar.addEventListener('click', closeMobileSidebar);
+    els.overlay.addEventListener('click', closeMobileSidebar);
+
+    // Boot
+    async function boot() {
+      const p = getQueryParams();
+      syncFormWithParams(p);
+      
+      await loadCategories();
+      await loadFavorites();
+      fetchListings();
+    }
+
+    boot();
+
+  </script>
+</body>
+</html>

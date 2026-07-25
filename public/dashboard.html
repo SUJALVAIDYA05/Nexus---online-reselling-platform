@@ -105,18 +105,28 @@
   </div>
 
   <div id="mainContent">
-    <nav class="navbar">
+    <nav class="navbar" id="navbar">
       <div class="container">
         <a href="/" class="logo">Nexus<span>.</span></a>
-        <div class="nav-right">
-          <div class="user-badge">
-            <div class="user-avatar" id="userAvatar">U</div>
-            <span id="userName">User</span>
-          </div>
-          <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
-        </div>
+        <ul class="nav-links" id="navLinks" style="display:flex; align-items:center; gap:2.2rem; list-style:none;">
+          <li><a href="/browse">Browse</a></li>
+          <li data-auth="user"><a href="/create-listing" class="btn-primary" style="padding:.5rem 1.2rem; border-radius:50px; color:#fff; background:var(--clr-accent);"><i class="fas fa-plus"></i> Post Ad</a></li>
+          <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+          <li data-auth="user"><a href="/favorites"><i class="fas fa-heart"></i></a></li>
+          <li data-auth="user" class="nav-user-menu" style="position:relative;">
+            <button class="user-nav-avatar" id="navAvatar" aria-label="User menu" style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, var(--clr-accent), #0f3460); color:#fff; border:none; cursor:pointer;"></button>
+            <div class="nav-dropdown" id="navDropdown" style="position:absolute; top:calc(100% + 10px); right:0; min-width:180px; background:#fff; border-radius:12px; box-shadow:var(--shadow-lg); opacity:0; visibility:hidden; transform:translateY(-8px); transition:all .25s ease; z-index:50;">
+              <a href="/dashboard" style="display:block; padding:12px 18px; color:var(--clr-text); text-decoration:none;"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+              <button onclick="logout()" style="display:block; width:100%; text-align:left; padding:12px 18px; color:var(--clr-text); background:none; border:none; cursor:pointer;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+          </li>
+        </ul>
       </div>
     </nav>
+    <style>
+      .nav-user-menu:hover .nav-dropdown { opacity: 1 !important; visibility: visible !important; transform: translateY(0) !important; }
+      .nav-dropdown a:hover, .nav-dropdown button:hover { background: var(--clr-light); color: var(--clr-accent) !important; }
+    </style>
 
     <main class="dashboard">
       <div class="container">
@@ -127,20 +137,20 @@
 
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-header"><h3 id="projectsCount">0</h3><i class="fas fa-folder"></i></div>
-            <p>Active Projects</p>
+            <div class="stat-header"><h3 id="projectsCount">0</h3><i class="fas fa-tags"></i></div>
+            <p>Active Listings</p>
           </div>
           <div class="stat-card">
-            <div class="stat-header"><h3 id="tasksCount">0</h3><i class="fas fa-tasks"></i></div>
-            <p>Tasks Completed</p>
+            <div class="stat-header"><h3 id="tasksCount">0</h3><i class="fas fa-boxes"></i></div>
+            <p>Total Items</p>
           </div>
           <div class="stat-card">
-            <div class="stat-header"><h3 id="teamCount">0</h3><i class="fas fa-users"></i></div>
-            <p>Team Members</p>
+            <div class="stat-header"><h3 id="teamCount">0</h3><i class="fas fa-heart"></i></div>
+            <p>Saved Favorites</p>
           </div>
           <div class="stat-card">
-            <div class="stat-header"><h3 id="growthRate">—</h3><i class="fas fa-chart-line"></i></div>
-            <p>Growth Rate</p>
+            <div class="stat-header"><h3 id="growthRate">0</h3><i class="fas fa-chart-line"></i></div>
+            <p>Sold Items</p>
           </div>
         </div>
 
@@ -156,16 +166,18 @@
           </div>
           <div class="card">
             <h3><i class="fas fa-link"></i> Quick Links</h3>
-            <div class="quick-link"><i class="fas fa-file-alt"></i><p>View Reports</p></div>
-            <div class="quick-link"><i class="fas fa-calendar"></i><p>Schedule Consultation</p></div>
-            <div class="quick-link"><i class="fas fa-cog"></i><p>Account Settings</p></div>
-            <div class="quick-link"><i class="fas fa-life-ring"></i><p>Help &amp; Support</p></div>
+            <a href="/my-listings" class="quick-link" style="text-decoration:none; color:inherit;"><i class="fas fa-box-open"></i><p>My Listings</p></a>
+            <a href="/favorites" class="quick-link" style="text-decoration:none; color:inherit;"><i class="fas fa-heart"></i><p>Favorites</p></a>
+            <a href="/create-listing" class="quick-link" style="text-decoration:none; color:inherit;"><i class="fas fa-plus"></i><p>Post New Ad</p></a>
+            <a href="#" class="quick-link" style="text-decoration:none; color:inherit; opacity:0.6; cursor:not-allowed;"><i class="fas fa-comment"></i><p>Messages (Coming Soon)</p></a>
           </div>
         </div>
       </div>
     </main>
   </div>
 
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
   <script>
     async function loadDashboard() {
       try {
@@ -175,15 +187,25 @@
         const user = data.user;
 
         const initial = (user.name ? user.name.charAt(0) : 'U').toUpperCase();
-        document.getElementById('userAvatar').textContent = initial;
-        document.getElementById('userName').textContent = user.name || user.email;
+        document.getElementById('navAvatar').textContent = initial;
         document.getElementById('welcomeName').textContent = user.name || user.email;
 
-        // Simulated stats
-        document.getElementById('projectsCount').textContent = Math.floor(Math.random() * 8) + 3;
-        document.getElementById('tasksCount').textContent = Math.floor(Math.random() * 40) + 15;
-        document.getElementById('teamCount').textContent = Math.floor(Math.random() * 10) + 5;
-        document.getElementById('growthRate').textContent = (Math.random() * 30 + 10).toFixed(1) + '%';
+        // Fetch real data
+        const [listingsRes, favRes] = await Promise.all([
+          window.api.get(`/api/users/${user.id}/listings`),
+          window.api.get('/api/favorites')
+        ]);
+        
+        const listings = listingsRes || [];
+        const favorites = favRes || [];
+        
+        const activeListings = listings.filter(l => l.status === 'active').length;
+        const soldListings = listings.filter(l => l.status === 'sold').length;
+
+        document.getElementById('projectsCount').textContent = activeListings;
+        document.getElementById('tasksCount').textContent = listings.length;
+        document.getElementById('teamCount').textContent = favorites.length;
+        document.getElementById('growthRate').textContent = soldListings;
 
         document.getElementById('loadingScreen').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
@@ -199,10 +221,7 @@
       }
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.href = '/';
-    });
+
 
     loadDashboard();
   </script>
