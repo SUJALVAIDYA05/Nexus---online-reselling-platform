@@ -149,6 +149,35 @@ app.get('/dashboard', (req, res) => {
   }
 });
 
+// --- Marketplace pages ---
+const publicDir = path.join(__dirname, '..', 'public');
+
+// Public marketplace pages
+app.get('/browse', (_req, res) => {
+  res.sendFile(path.join(publicDir, 'browse.html'));
+});
+app.get('/listing-detail', (_req, res) => {
+  res.sendFile(path.join(publicDir, 'listing-detail.html'));
+});
+
+// Protected marketplace pages (require auth cookie)
+function requireAuthPage(page) {
+  return (req, res) => {
+    const token = req.cookies?.token;
+    if (!token) return res.redirect('/login');
+    try {
+      const jwt = require('jsonwebtoken');
+      jwt.verify(token, JWT_SECRET);
+      res.sendFile(path.join(publicDir, page));
+    } catch {
+      res.redirect('/login');
+    }
+  };
+}
+app.get('/create-listing', requireAuthPage('create-listing.html'));
+app.get('/my-listings', requireAuthPage('my-listings.html'));
+app.get('/favorites', requireAuthPage('favorites.html'));
+
 // --- Centralized error handler (must be last) ---
 app.use(errorHandler);
 

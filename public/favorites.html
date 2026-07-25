@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favorites - Nexus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --clr-primary: #1a1a2e;
+      --clr-accent:  #e94560;
+      --clr-accent2: #0f3460;
+      --clr-dark:    #16213e;
+      --clr-light:   #f8f9fa;
+      --clr-text:    #4a4a5a;
+      --clr-white:   #ffffff;
+      --radius:      16px;
+      --shadow:      0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg:   0 12px 48px rgba(0,0,0,.12);
+      --transition:  0.3s cubic-bezier(.4,0,.2,1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; color: var(--clr-text); line-height: 1.6; background-color: var(--clr-light); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* ---------- Navbar ---------- */
+    .navbar { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      padding: 18px 0; transition: var(--transition); }
+    .navbar.scrolled { background: rgba(26,26,46,.92); backdrop-filter: blur(14px);
+      padding: 12px 0; box-shadow: 0 4px 30px rgba(0,0,0,.15); }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: #fff; text-decoration: none; }
+    .logo span { color: var(--clr-accent); }
+    .nav-links { list-style: none; display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: rgba(255,255,255,.8); text-decoration: none; font-weight: 500; font-size: .95rem;
+      transition: color var(--transition); }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .btn-link { color: rgba(255,255,255,.9) !important; }
+    .nav-cta { background: var(--clr-accent); color: #fff !important; padding: 10px 22px;
+      border-radius: 50px; font-weight: 600 !important; transition: all var(--transition); display:inline-flex;align-items:center;gap:6px; }
+    .nav-cta:hover { background: #d63d56; transform: translateY(-2px); }
+    .nav-fav-link { font-size: 1.05rem; }
+    .nav-fav-link.active i { color: var(--clr-accent); }
+
+    /* User avatar dropdown */
+    .nav-user-menu { position: relative; }
+    .user-nav-avatar { width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--clr-accent), #0f3460); color: #fff;
+      font-weight: 700; font-size: .9rem; border: 2px solid rgba(255,255,255,.3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-family: inherit; transition: all .2s ease; }
+    .user-nav-avatar:hover { border-color: #fff; transform: scale(1.08); }
+    .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; min-width: 180px;
+      background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: all .25s ease; overflow: hidden; z-index: 50; }
+    .nav-user-menu:hover .nav-dropdown,
+    .nav-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-dropdown a, .nav-dropdown button { display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; color: var(--clr-text); text-decoration: none; font-size: .9rem;
+      font-weight: 500; border: none; background: none; width: 100%; cursor: pointer;
+      font-family: inherit; transition: background .15s ease; }
+    .nav-dropdown a:hover, .nav-dropdown button:hover { background: var(--clr-light); color: var(--clr-accent); }
+
+    /* Auth visibility */
+    [data-auth="user"] { display: none; }
+
+    /* Hamburger */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: #fff;
+      margin: 5px 0; border-radius: 2px; transition: var(--transition); }
+
+    @media (max-width: 868px) {
+      .hamburger { display: block; }
+      .nav-links { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh;
+        background: var(--clr-primary); flex-direction: column; padding: 80px 32px 32px;
+        gap: 20px; transition: right .35s ease; z-index: 999; }
+      .nav-links.open { right: 0; }
+      .nav-user-menu { width: 100%; }
+      .nav-dropdown { position: static; opacity: 1; visibility: visible; transform: none;
+        box-shadow: none; background: rgba(255,255,255,.08); border-radius: 8px; margin-top: 8px; }
+      .nav-dropdown a, .nav-dropdown button { color: rgba(255,255,255,.8); }
+      .nav-dropdown a:hover, .nav-dropdown button:hover { background: rgba(255,255,255,.1); color: #fff; }
+    }
+
+    /* Page Header */
+    .page-header { min-height: 40vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; background: linear-gradient(135deg, var(--clr-primary), var(--clr-dark), var(--clr-accent2));
+      color: #fff; position: relative; overflow: hidden; padding-top: 60px; }
+    .page-header::before { content: ''; position: absolute; width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(233,69,96,.15), transparent 70%);
+      top: -150px; right: -100px; }
+    .page-header-content { position: relative; z-index: 1; }
+    .page-header h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; }
+    .page-header h1 span { color: var(--clr-accent); }
+    .page-header p { margin-top: 16px; font-size: 1.1rem; color: rgba(255,255,255,.7); max-width: 600px; margin-bottom: 24px; }
+
+    /* Main Content */
+    .content-section { padding: 60px 0 80px; min-height: 400px; }
+
+    /* Loading States */
+    .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .skeleton-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); height: 350px; }
+    .skeleton-img { height: 200px; background: #e2e8f0; animation: pulse 1.5s infinite ease-in-out; }
+    .skeleton-body { padding: 16px 18px; }
+    .skeleton-line { height: 16px; background: #e2e8f0; border-radius: 4px; margin-bottom: 12px; animation: pulse 1.5s infinite ease-in-out; }
+    .skeleton-line.short { width: 60%; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 20px; background: #fff; border-radius: 24px; box-shadow: var(--shadow); margin: 0 auto; max-width: 600px; display: none; }
+    .empty-icon { font-size: 4rem; color: #cbd5e1; margin-bottom: 20px; }
+    .empty-icon.heart i { color: #fecdd3; }
+    .empty-state h3 { font-size: 1.5rem; color: var(--clr-primary); margin-bottom: 10px; }
+    .empty-state p { color: #64748b; margin-bottom: 24px; }
+
+    /* Fade out animation */
+    .fade-out { opacity: 0; transform: scale(0.9); pointer-events: none; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 32px; right: 32px; background: #fff; color: var(--clr-primary);
+      padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow-lg); font-weight: 600; font-size: .95rem;
+      display: flex; align-items: center; gap: 12px; z-index: 3000;
+      transform: translateY(100px); opacity: 0; transition: all .3s cubic-bezier(.4,0,.2,1); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast i { color: #10b981; font-size: 1.2rem; }
+
+    /* Footer */
+    footer { background: var(--clr-primary); color: rgba(255,255,255,.7); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+    .footer-brand p { margin: 16px 0; font-size: .9rem; line-height: 1.7; }
+    .footer-social { display: flex; gap: 12px; }
+    .footer-social a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6);
+      transition: all var(--transition); }
+    .footer-social a:hover { background: var(--clr-accent); border-color: var(--clr-accent); color: #fff; }
+    footer h4 { color: #fff; margin-bottom: 20px; font-size: 1rem; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 10px; }
+    footer ul a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem;
+      transition: color var(--transition); }
+    footer ul a:hover { color: var(--clr-accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); margin-top: 40px;
+      padding: 20px 0; display: flex; justify-content: space-between; font-size: .85rem; }
+    .footer-bottom .fa-heart { color: var(--clr-accent); }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+
+    /* Preloader & Back-to-top */
+    #preloader { position: fixed; inset: 0; background: var(--clr-primary); display: flex;
+      align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s ease; }
+    #preloader.hidden { opacity: 0; pointer-events: none; }
+    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,.1);
+      border-top-color: var(--clr-accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #backToTop { position: fixed; bottom: 32px; right: 32px; width: 44px; height: 44px;
+      border-radius: 50%; background: var(--clr-accent); color: #fff; border: none;
+      cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transform: translateY(20px); transition: all .3s ease; z-index: 100; }
+    #backToTop.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    #backToTop:hover { background: #d63d56; transform: translateY(-3px); }
+    
+    /* Scroll reveal */
+    .reveal, .reveal-left, .reveal-right, .reveal-scale { opacity: 0; transform: translateY(40px); transition: all .8s cubic-bezier(.4,0,.2,1); }
+    .reveal-left { transform: translateX(-40px); }
+    .reveal-right { transform: translateX(40px); }
+    .reveal-scale { transform: scale(.9); }
+    .reveal.visible, .reveal-left.visible, .reveal-right.visible, .reveal-scale.visible { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Preloader -->
+  <div id="preloader"><div class="loader-ring"></div></div>
+  <!-- Back-to-top -->
+  <button id="backToTop" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">Nexus<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/browse">Browse</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/about">About</a></li>
+        <li data-auth="guest"><a href="/login" class="btn-link">Sign In</a></li>
+        <li data-auth="guest"><a href="/signup" class="nav-cta">Get Started</a></li>
+        <li data-auth="user"><a href="/create-listing" class="nav-cta"><i class="fas fa-plus"></i> Post Ad</a></li>
+        <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+        <li data-auth="user"><a href="/favorites" class="nav-fav-link active"><i class="fas fa-heart"></i></a></li>
+        <li data-auth="user" class="nav-user-menu">
+          <button class="user-nav-avatar" id="navAvatar" aria-label="User menu"></button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <div class="page-header-content reveal">
+      <h1>My <span>Favorites</span></h1>
+      <p>Items you've saved for later</p>
+    </div>
+  </header>
+
+  <section class="content-section container">
+    <div id="listingsLoading" class="loading-grid">
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+    </div>
+    
+    <div id="listingsGrid" class="listing-grid" style="display:none;"></div>
+    
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon heart"><i class="fas fa-heart-broken"></i></div>
+      <h3>No favorites yet</h3>
+      <p>You haven't saved any items to your favorites. Browse the marketplace and click the heart icon on items you like.</p>
+      <a href="/browse" class="nav-cta">Browse Listings</a>
+    </div>
+  </section>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+    <span id="toastMessage">Removed from favorites</span>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">Nexus<span>.</span></a>
+          <p>Your trusted marketplace for buying and selling pre-owned goods. Find great deals or turn your unused items into cash.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Dribbble"><i class="fab fa-dribbble"></i></a>
+          </div>
+        </div>
+        <div><h4>Marketplace</h4><ul><li><a href="/browse">Browse Listings</a></li><li><a href="/create-listing">Post an Ad</a></li><li><a href="/favorites">My Favorites</a></li></ul></div>
+        <div><h4>Company</h4><ul><li><a href="/about">About Us</a></li><li><a href="/services">Services</a></li><li><a href="/testimonials">Testimonials</a></li></ul></div>
+        <div><h4>Support</h4><ul><li><a href="#">Contact</a></li><li><a href="#">FAQ</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nexus. All rights reserved.</p>
+        <p>Made with <i class="fas fa-heart"></i> in India</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/listingCard.js"></script>
+  <script src="/js/auth.js"></script>
+  
+  <script>
+    // Utilities
+    window.addEventListener('load', () => { const p = document.getElementById('preloader'); if(p) p.classList.add('hidden'); });
+    const heroObs = document.querySelector('.page-header');
+    if (heroObs) { new IntersectionObserver(([e]) => document.getElementById('navbar').classList.toggle('scrolled', !e.isIntersecting), { threshold: 0.1 }).observe(heroObs); }
+    else { document.getElementById('navbar').classList.add('scrolled'); }
+    document.getElementById('hamburger')?.addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+    const revealObs = new IntersectionObserver((entries) => entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } }), { threshold: 0.1 });
+    document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').forEach(el => revealObs.observe(el));
+    const btt = document.getElementById('backToTop');
+    if (btt) {
+      window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 600));
+      btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+
+    // Page Logic
+    let allFavorites = [];
+    const grid = document.getElementById('listingsGrid');
+    const loading = document.getElementById('listingsLoading');
+    const emptyState = document.getElementById('emptyState');
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMessage');
+
+    function showToast(msg) {
+      toastMsg.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function renderFavorites() {
+      grid.innerHTML = '';
+      
+      if (allFavorites.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+        grid.style.display = 'grid';
+        
+        // The API returns an array of favorite objects, with a populated 'listing' field.
+        const listings = allFavorites.map(fav => fav.listing).filter(Boolean);
+        const favoriteIds = new Set(listings.map(l => l._id || l.id));
+        
+        listings.forEach(listing => {
+          const card = window.renderListingCard(listing, {
+            favoriteIds: favoriteIds,
+            onFavoriteToggle: (listingId, nowFavorited) => {
+              if (!nowFavorited) {
+                // Find card and animate out
+                const cardEl = grid.querySelector(`[data-listing-id="${listingId}"]`);
+                if (cardEl) {
+                  cardEl.classList.add('fade-out');
+                  setTimeout(() => {
+                    allFavorites = allFavorites.filter(fav => (fav.listing && (fav.listing._id || fav.listing.id) !== listingId));
+                    renderFavorites();
+                  }, 300);
+                }
+                showToast('Removed from favorites');
+              }
+            }
+          });
+          grid.appendChild(card);
+        });
+      }
+    }
+
+    window.addEventListener('authReady', async (e) => {
+      if (!window.requireAuth()) return;
+      
+      try {
+        const data = await window.api.get('/api/favorites');
+        allFavorites = data || [];
+        loading.style.display = 'none';
+        renderFavorites();
+      } catch(err) {
+        console.error(err);
+        loading.style.display = 'none';
+        emptyState.style.display = 'block';
+        emptyState.querySelector('h3').textContent = 'Error loading favorites';
+        emptyState.querySelector('p').textContent = err.message || 'Please try again later.';
+      }
+    });
+  </script>
+</body>
+</html>
