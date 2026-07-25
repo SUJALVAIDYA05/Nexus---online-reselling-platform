@@ -55,4 +55,7 @@ const listingSchema = new mongoose.Schema(
   }
 );
 
+// Full-text search index on title and description
+listingSchema.index({ title: 'text', description: 'text' });
+
 module.exports = mongoose.model('Listing', listingSchema);
