@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post Listing — Nexus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* CSS Variables from Design System */
+    :root {
+      --clr-primary: #1a1a2e;
+      --clr-accent:  #e94560;
+      --clr-accent2: #0f3460;
+      --clr-dark:    #16213e;
+      --clr-light:   #f8f9fa;
+      --clr-text:    #4a4a5a;
+      --clr-white:   #ffffff;
+      --radius:      16px;
+      --shadow:      0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg:   0 12px 48px rgba(0,0,0,.12);
+      --transition:  0.3s cubic-bezier(.4,0,.2,1);
+      --ff: 'Inter', -apple-system, sans-serif;
+    }
+
+    /* Base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--ff); color: var(--clr-text); line-height: 1.6; background: #f4f5f7; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ---------- Navbar ---------- */
+    .navbar { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; padding: 18px 0; transition: var(--transition); }
+    .navbar.scrolled { background: rgba(26,26,46,.92); backdrop-filter: blur(14px); padding: 12px 0; box-shadow: 0 4px 30px rgba(0,0,0,.15); }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: #fff; text-decoration: none; }
+    .logo span { color: var(--clr-accent); }
+    .nav-links { list-style: none; display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: rgba(255,255,255,.8); text-decoration: none; font-weight: 500; font-size: .95rem; transition: color var(--transition); }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .btn-link { color: rgba(255,255,255,.9) !important; }
+    .nav-cta { background: var(--clr-accent); color: #fff !important; padding: 10px 22px; border-radius: 50px; font-weight: 600 !important; transition: all var(--transition); display:inline-flex;align-items:center;gap:6px; }
+    .nav-cta:hover { background: #d63d56; transform: translateY(-2px); }
+    .nav-fav-link { font-size: 1.05rem; }
+
+    .nav-user-menu { position: relative; }
+    .user-nav-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--clr-accent), #0f3460); color: #fff; font-weight: 700; font-size: .9rem; border: 2px solid rgba(255,255,255,.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: all .2s ease; }
+    .user-nav-avatar:hover { border-color: #fff; transform: scale(1.08); }
+    .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; min-width: 180px; background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all .25s ease; overflow: hidden; z-index: 50; }
+    .nav-user-menu:hover .nav-dropdown, .nav-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-dropdown a, .nav-dropdown button { display: flex; align-items: center; gap: 10px; padding: 12px 18px; color: var(--clr-text); text-decoration: none; font-size: .9rem; font-weight: 500; border: none; background: none; width: 100%; cursor: pointer; font-family: inherit; transition: background .15s ease; }
+    .nav-dropdown a:hover, .nav-dropdown button:hover { background: var(--clr-light); color: var(--clr-accent); }
+
+    [data-auth="user"] { display: none; }
+
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: #fff; margin: 5px 0; border-radius: 2px; transition: var(--transition); }
+
+    @media (max-width: 868px) {
+      .hamburger { display: block; }
+      .nav-links { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: var(--clr-primary); flex-direction: column; padding: 80px 32px 32px; gap: 20px; transition: right .35s ease; z-index: 999; }
+      .nav-links.open { right: 0; }
+      .nav-user-menu { width: 100%; }
+      .nav-dropdown { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; background: rgba(255,255,255,.08); border-radius: 8px; margin-top: 8px; }
+      .nav-dropdown a, .nav-dropdown button { color: rgba(255,255,255,.8); }
+      .nav-dropdown a:hover, .nav-dropdown button:hover { background: rgba(255,255,255,.1); color: #fff; }
+    }
+
+    /* ---------- Page Header ---------- */
+    .page-header { min-height: 35vh; display: flex; align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, var(--clr-primary), var(--clr-dark), var(--clr-accent2)); color: #fff; position: relative; overflow: hidden; padding-top: 80px; }
+    .page-header::before { content: ''; position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(233,69,96,.15), transparent 70%); top: -150px; right: -100px; }
+    .page-header h1 { font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 800; position: relative; z-index: 1; }
+    .page-header h1 span { color: var(--clr-accent); }
+
+    /* ---------- Form Section ---------- */
+    .form-section { padding: 60px 0; }
+    .form-card { max-width: 720px; margin: -100px auto 0; background: var(--clr-white); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 40px; position: relative; z-index: 10; }
+    
+    .form-group { margin-bottom: 1.5rem; position: relative; }
+    .form-group.row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    
+    .form-group label { display: block; font-size: .88rem; font-weight: 600; color: var(--clr-text); margin-bottom: .5rem; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: .85rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-family: var(--ff); font-size: .95rem; outline: none; transition: var(--transition); background: var(--clr-white); color: var(--clr-text);
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      border-color: var(--clr-accent); box-shadow: 0 0 0 3px rgba(233,69,96,.12);
+    }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+    
+    .price-input-wrapper { position: relative; }
+    .price-input-wrapper span { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 500; font-size: 1rem; pointer-events: none; }
+    .price-input-wrapper input { padding-left: 2.2rem; }
+
+    /* Drag and Drop Zone */
+    .dropzone {
+      border: 2px dashed #cbd5e1; border-radius: 12px; padding: 30px; text-align: center;
+      background: #f8fafc; cursor: pointer; transition: var(--transition); display: flex;
+      flex-direction: column; align-items: center; gap: 10px; color: #64748b;
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: var(--clr-accent); background: #fff1f2; color: var(--clr-accent); }
+    .dropzone i { font-size: 2rem; color: inherit; }
+    .dropzone p { font-size: .9rem; font-weight: 500; }
+    .dropzone small { font-size: .8rem; opacity: .8; }
+
+    .image-previews { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
+    .thumb { width: 100px; height: 100px; border-radius: 10px; overflow: hidden; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb .remove-btn { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: .7rem; transition: background .2s; }
+    .thumb .remove-btn:hover { background: #ef4444; }
+
+    /* Submit Button */
+    .btn-submit { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; width: 100%; padding: 1rem; border-radius: 10px; font-weight: 600; font-size: 1.05rem; border: none; cursor: pointer; transition: var(--transition); font-family: var(--ff); background: var(--clr-accent); color: #fff; margin-top: 1rem; position: relative; overflow: hidden; }
+    .btn-submit::before { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,.1); transform: translateX(-100%) skewX(-20deg); transition: transform .5s ease; }
+    .btn-submit:hover::before { transform: translateX(100%) skewX(-20deg); }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(233,69,96,.35); }
+    .btn-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Alert */
+    .alert { padding: 1rem; border-radius: 10px; font-size: .9rem; margin-bottom: 1.5rem; display: none; font-weight: 500; }
+    .alert.error { display: block; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .alert.success { display: block; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    /* ---------- Footer ---------- */
+    footer { background: var(--clr-primary); color: rgba(255,255,255,.7); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+    .footer-brand p { margin: 16px 0; font-size: .9rem; line-height: 1.7; }
+    .footer-social { display: flex; gap: 12px; }
+    .footer-social a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6); transition: all var(--transition); }
+    .footer-social a:hover { background: var(--clr-accent); border-color: var(--clr-accent); color: #fff; }
+    footer h4 { color: #fff; margin-bottom: 20px; font-size: 1rem; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 10px; }
+    footer ul a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem; transition: color var(--transition); }
+    footer ul a:hover { color: var(--clr-accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); margin-top: 40px; padding: 20px 0; display: flex; justify-content: space-between; font-size: .85rem; }
+    .footer-bottom .fa-heart { color: var(--clr-accent); }
+
+    /* ---------- Preloader & BTT ---------- */
+    #preloader { position: fixed; inset: 0; background: var(--clr-primary); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s ease; }
+    #preloader.hidden { opacity: 0; pointer-events: none; }
+    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,.1); border-top-color: var(--clr-accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #backToTop { position: fixed; bottom: 32px; right: 32px; width: 44px; height: 44px; border-radius: 50%; background: var(--clr-accent); color: #fff; border: none; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transform: translateY(20px); transition: all .3s ease; z-index: 100; }
+    #backToTop.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    #backToTop:hover { background: #d63d56; transform: translateY(-3px); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .form-card { margin-top: -60px; padding: 25px; }
+      .form-group.row { grid-template-columns: 1fr; gap: 0; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Preloader -->
+  <div id="preloader"><div class="loader-ring"></div></div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">Nexus<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/browse">Browse</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/about">About</a></li>
+        <li data-auth="guest"><a href="/login" class="btn-link">Sign In</a></li>
+        <li data-auth="guest"><a href="/signup" class="nav-cta">Get Started</a></li>
+        <li data-auth="user"><a href="/create-listing" class="nav-cta active"><i class="fas fa-plus"></i> Post Ad</a></li>
+        <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+        <li data-auth="user"><a href="/messages"><i class="fas fa-comment-dots"></i> Messages</a></li>
+        <li data-auth="user"><a href="/favorites" class="nav-fav-link"><i class="fas fa-heart"></i></a></li>
+        <li data-auth="user" class="nav-user-menu">
+          <button class="user-nav-avatar" id="navAvatar" aria-label="User menu"></button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <header class="page-header" id="hero">
+    <h1 id="pageTitle">Post Your <span>Ad</span></h1>
+  </header>
+
+  <!-- Main Content -->
+  <main class="form-section container">
+    <div class="form-card">
+      <div id="alertBox" class="alert"></div>
+      
+      <form id="listingForm">
+        <div class="form-group">
+          <label for="title">Title <span style="color:#ef4444">*</span></label>
+          <input type="text" id="title" placeholder="e.g. MacBook Pro M2 2023" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description <span style="color:#ef4444">*</span></label>
+          <textarea id="description" rows="5" placeholder="Describe the item, its condition, included accessories..." required></textarea>
+        </div>
+
+        <div class="form-group row">
+          <div>
+            <label for="price">Price <span style="color:#ef4444">*</span></label>
+            <div class="price-input-wrapper">
+              <span>₹</span>
+              <input type="number" id="price" placeholder="0" min="0" required>
+            </div>
+          </div>
+          <div>
+            <label for="category">Category <span style="color:#ef4444">*</span></label>
+            <select id="category" required>
+              <option value="" disabled selected>Select Category</option>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <div>
+            <label for="condition">Condition</label>
+            <select id="condition">
+              <option value="new">New</option>
+              <option value="like-new">Like New</option>
+              <option value="good">Good</option>
+              <option value="fair">Fair</option>
+              <option value="poor">Poor</option>
+            </select>
+          </div>
+          <div>
+            <label for="location">Location</label>
+            <input type="text" id="location" placeholder="e.g. Mumbai, Maharashtra">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Images (Up to 6)</label>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="fileInput" accept="image/*" multiple hidden>
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Drag & drop images here or click to browse</p>
+            <small id="imageCountText">0/6 images</small>
+          </div>
+          <div class="image-previews" id="imagePreviews"></div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">Post Listing <i class="fas fa-arrow-right"></i></button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">Nexus<span>.</span></a>
+          <p>Your trusted marketplace for buying and selling pre-owned goods. Find great deals or turn your unused items into cash.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Dribbble"><i class="fab fa-dribbble"></i></a>
+          </div>
+        </div>
+        <div><h4>Marketplace</h4><ul><li><a href="/browse">Browse Listings</a></li><li><a href="/create-listing">Post an Ad</a></li><li><a href="/favorites">My Favorites</a></li></ul></div>
+        <div><h4>Company</h4><ul><li><a href="/about">About Us</a></li><li><a href="/services">Services</a></li><li><a href="/testimonials">Testimonials</a></li></ul></div>
+        <div><h4>Support</h4><ul><li><a href="#">Contact</a></li><li><a href="#">FAQ</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nexus. All rights reserved.</p>
+        <p>Made with <i class="fas fa-heart"></i> in India</p>
+      </div>
+    </div>
+  </footer>
+
+  <button id="backToTop" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    // General Utilities
+    const heroObs = document.querySelector('.page-header');
+    if (heroObs) { new IntersectionObserver(([e]) => document.getElementById('navbar').classList.toggle('scrolled', !e.isIntersecting), { threshold: 0.1 }).observe(heroObs); }
+    
+    document.getElementById('hamburger')?.addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+
+    const btt = document.getElementById('backToTop');
+    if (btt) {
+      window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 600));
+      btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+
+    function showAlert(msg, type) {
+      const box = document.getElementById('alertBox');
+      box.textContent = msg;
+      box.className = 'alert ' + type;
+    }
+
+    // Listing Logic
+    let isEditMode = false;
+    let listingId = null;
+    let existingImages = []; 
+    let selectedFiles = []; 
+
+    window.addEventListener('authReady', async () => {
+      if (!window.requireAuth()) return;
+
+      await loadCategories();
+
+      const params = new URLSearchParams(window.location.search);
+      listingId = params.get('id');
+
+      if (listingId) {
+        isEditMode = true;
+        await setupEditMode();
+      } else {
+        document.getElementById('preloader').classList.add('hidden');
+      }
+    });
+
+    async function loadCategories() {
+      try {
+        const cats = await window.api.get('/api/categories');
+        const select = document.getElementById('category');
+        cats.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c._id;
+          opt.textContent = c.name;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    }
+
+    async function setupEditMode() {
+      document.getElementById('pageTitle').innerHTML = 'Edit Your <span>Listing</span>';
+      document.getElementById('submitBtn').innerHTML = 'Update Listing <i class="fas fa-arrow-right"></i>';
+      document.title = 'Edit Listing — Nexus';
+
+      try {
+        const listing = await window.api.get(`/api/listings/${listingId}`);
+        
+        // Ownership check
+        const sellerId = typeof listing.seller === 'object' ? listing.seller._id : listing.seller;
+        if (sellerId !== window.currentUser.id) {
+          window.location.href = `/listing-detail?id=${listingId}`;
+          return;
+        }
+
+        // Fill form
+        document.getElementById('title').value = listing.title;
+        document.getElementById('description').value = listing.description;
+        document.getElementById('price').value = listing.price;
+        document.getElementById('category').value = (listing.category && listing.category._id) ? listing.category._id : listing.category;
+        if(listing.condition) document.getElementById('condition').value = listing.condition;
+        document.getElementById('location').value = listing.location || '';
+
+        existingImages = listing.images || [];
+        renderImagePreviews();
+
+        document.getElementById('preloader').classList.add('hidden');
+      } catch (err) {
+        showAlert('Failed to load listing details.', 'error');
+        document.getElementById('preloader').classList.add('hidden');
+      }
+    }
+
+    // Image Upload UX
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+    });
+
+    dropzone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+      const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      const total = existingImages.length + selectedFiles.length + newFiles.length;
+      if (total > 6) {
+        showAlert('You can only upload up to 6 images.', 'error');
+        return;
+      }
+      selectedFiles = selectedFiles.concat(newFiles);
+      renderImagePreviews();
+      fileInput.value = ''; // reset
+    }
+
+    function renderImagePreviews() {
+      const container = document.getElementById('imagePreviews');
+      container.innerHTML = '';
+      const total = existingImages.length + selectedFiles.length;
+      document.getElementById('imageCountText').textContent = `${total}/6 images`;
+
+      existingImages.forEach((img, index) => {
+        container.appendChild(createThumbnail(img.url, () => {
+          existingImages.splice(index, 1);
+          renderImagePreviews();
+        }));
+      });
+
+      selectedFiles.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        container.appendChild(createThumbnail(url, () => {
+          selectedFiles.splice(index, 1);
+          URL.revokeObjectURL(url);
+          renderImagePreviews();
+        }));
+      });
+    }
+
+    function createThumbnail(src, onRemove) {
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      const img = document.createElement('img');
+      img.src = src;
+      const btn = document.createElement('button');
+      btn.className = 'remove-btn';
+      btn.innerHTML = '<i class="fas fa-times"></i>';
+      btn.type = 'button';
+      btn.onclick = (e) => { e.stopPropagation(); onRemove(); };
+      div.appendChild(img);
+      div.appendChild(btn);
+      return div;
+    }
+
+    // Submit Handler
+    document.getElementById('listingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAlert('', ''); // clear
+      document.getElementById('alertBox').style.display = 'none';
+
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const price = document.getElementById('price').value;
+      const category = document.getElementById('category').value;
+      const condition = document.getElementById('condition').value;
+      const location = document.getElementById('location').value.trim();
+
+      if (!title || !description || !price || !category) {
+        showAlert('Please fill all required fields.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      const ogText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      try {
+        let uploadedUrls = [];
+        if (selectedFiles.length > 0) {
+          const formData = new FormData();
+          selectedFiles.forEach(f => formData.append('images', f));
+          const uploadRes = await window.api.upload('/api/uploads', formData);
+          uploadedUrls = uploadRes.urls || [];
+        }
+
+        const finalImages = existingImages.concat(uploadedUrls);
+        const body = { title, description, price: Number(price), category, condition, location, images: finalImages };
+
+        if (isEditMode) {
+          await window.api.put(`/api/listings/${listingId}`, body);
+          window.location.href = `/listing-detail?id=${listingId}`;
+        } else {
+          const created = await window.api.post('/api/listings', body);
+          // depending on response format, might be created._id or created.listing._id
+          const newId = created._id || (created.listing && created.listing._id) || '';
+          window.location.href = newId ? `/listing-detail?id=${newId}` : '/my-listings';
+        }
+      } catch (err) {
+        showAlert(err.message || 'Failed to save listing.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = ogText;
+      }
+    });
+  </script>
+</body>
+</html>

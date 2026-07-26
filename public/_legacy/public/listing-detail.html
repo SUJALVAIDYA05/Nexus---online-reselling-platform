@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Listing Detail — Nexus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --clr-primary: #1a1a2e;
+      --clr-accent:  #e94560;
+      --clr-accent2: #0f3460;
+      --clr-dark:    #16213e;
+      --clr-light:   #f8f9fa;
+      --clr-text:    #4a4a5a;
+      --clr-white:   #ffffff;
+      --radius:      16px;
+      --shadow:      0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg:   0 12px 48px rgba(0,0,0,.12);
+      --transition:  0.3s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ---------- Base & Reset ---------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, sans-serif; color: var(--clr-text); line-height: 1.6; background: var(--clr-light); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ---------- Navbar ---------- */
+    .navbar { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      padding: 18px 0; transition: var(--transition); }
+    .navbar.scrolled { background: rgba(26,26,46,.92); backdrop-filter: blur(14px);
+      padding: 12px 0; box-shadow: 0 4px 30px rgba(0,0,0,.15); }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: #fff; text-decoration: none; }
+    .navbar:not(.scrolled) .logo { color: var(--clr-primary); }
+    .logo span { color: var(--clr-accent); }
+    .nav-links { list-style: none; display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: rgba(26,26,46,.8); text-decoration: none; font-weight: 500; font-size: .95rem;
+      transition: color var(--transition); }
+    .navbar.scrolled .nav-links a { color: rgba(255,255,255,.8); }
+    .nav-links a:hover, .nav-links a.active { color: var(--clr-primary); }
+    .navbar.scrolled .nav-links a:hover, .navbar.scrolled .nav-links a.active { color: #fff; }
+    .navbar.scrolled .btn-link { color: rgba(255,255,255,.9) !important; }
+    .nav-cta { background: var(--clr-accent); color: #fff !important; padding: 10px 22px;
+      border-radius: 50px; font-weight: 600 !important; transition: all var(--transition); display:inline-flex;align-items:center;gap:6px; }
+    .nav-cta:hover { background: #d63d56; transform: translateY(-2px); }
+    .nav-fav-link { font-size: 1.05rem; }
+
+    /* User avatar dropdown */
+    .nav-user-menu { position: relative; }
+    .user-nav-avatar { width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--clr-accent), #0f3460); color: #fff;
+      font-weight: 700; font-size: .9rem; border: 2px solid rgba(255,255,255,.3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-family: inherit; transition: all .2s ease; }
+    .navbar:not(.scrolled) .user-nav-avatar { border-color: rgba(26,26,46,.2); }
+    .user-nav-avatar:hover { border-color: #fff; transform: scale(1.08); }
+    .navbar:not(.scrolled) .user-nav-avatar:hover { border-color: var(--clr-primary); }
+    .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; min-width: 180px;
+      background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: all .25s ease; overflow: hidden; z-index: 50; }
+    .nav-user-menu:hover .nav-dropdown,
+    .nav-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-dropdown a, .nav-dropdown button { display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; color: var(--clr-text); text-decoration: none; font-size: .9rem;
+      font-weight: 500; border: none; background: none; width: 100%; cursor: pointer;
+      font-family: inherit; transition: background .15s ease; }
+    .nav-dropdown a:hover, .nav-dropdown button:hover { background: var(--clr-light); color: var(--clr-accent); }
+
+    /* Auth visibility — hidden by default, toggled by auth.js */
+    [data-auth="user"] { display: none; }
+
+    /* Hamburger */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--clr-primary);
+      margin: 5px 0; border-radius: 2px; transition: var(--transition); }
+    .navbar.scrolled .hamburger span { background: #fff; }
+
+    @media (max-width: 868px) {
+      .hamburger { display: block; }
+      .nav-links { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh;
+        background: var(--clr-primary); flex-direction: column; padding: 80px 32px 32px;
+        gap: 20px; transition: right .35s ease; z-index: 999; }
+      .nav-links.open { right: 0; }
+      .nav-user-menu { width: 100%; }
+      .nav-dropdown { position: static; opacity: 1; visibility: visible; transform: none;
+        box-shadow: none; background: rgba(255,255,255,.08); border-radius: 8px; margin-top: 8px; }
+      .nav-dropdown a, .nav-dropdown button { color: rgba(255,255,255,.8); }
+      .nav-dropdown a:hover, .nav-dropdown button:hover { background: rgba(255,255,255,.1); color: #fff; }
+      .nav-links a { color: rgba(255,255,255,.8); }
+      .nav-links a:hover, .nav-links a.active { color: #fff; }
+    }
+
+    /* ---------- Footer ---------- */
+    footer { background: var(--clr-primary); color: rgba(255,255,255,.7); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+    .footer-brand p { margin: 16px 0; font-size: .9rem; line-height: 1.7; }
+    .footer-social { display: flex; gap: 12px; }
+    .footer-social a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6);
+      transition: all var(--transition); }
+    .footer-social a:hover { background: var(--clr-accent); border-color: var(--clr-accent); color: #fff; }
+    footer h4 { color: #fff; margin-bottom: 20px; font-size: 1rem; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 10px; }
+    footer ul a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem;
+      transition: color var(--transition); }
+    footer ul a:hover { color: var(--clr-accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); margin-top: 40px;
+      padding: 20px 0; display: flex; justify-content: space-between; font-size: .85rem; }
+    .footer-bottom .fa-heart { color: var(--clr-accent); }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+
+    /* ---------- Preloader & Back-to-top ---------- */
+    #preloader { position: fixed; inset: 0; background: var(--clr-primary); display: flex;
+      align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s ease; }
+    #preloader.hidden { opacity: 0; pointer-events: none; }
+    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,.1);
+      border-top-color: var(--clr-accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #backToTop { position: fixed; bottom: 32px; right: 32px; width: 44px; height: 44px;
+      border-radius: 50%; background: var(--clr-accent); color: #fff; border: none;
+      cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden; transform: translateY(20px); transition: all .3s ease; z-index: 100; }
+    #backToTop.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    #backToTop:hover { background: #d63d56; transform: translateY(-3px); }
+
+    /* ---------- Utilities ---------- */
+    .reveal, .reveal-left, .reveal-right, .reveal-scale { opacity: 0; transform: translateY(40px); transition: all .8s cubic-bezier(.4,0,.2,1); }
+    .reveal-left { transform: translateX(-40px); }
+    .reveal-right { transform: translateX(40px); }
+    .reveal-scale { transform: scale(.9); }
+    .reveal.visible, .reveal-left.visible, .reveal-right.visible, .reveal-scale.visible { opacity: 1; transform: none; }
+
+    /* ---------- Main Layout ---------- */
+    main { padding-top: 100px; padding-bottom: 60px; min-height: 80vh; }
+    .listing-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    /* ---------- Left Column (Images) ---------- */
+    .listing-images {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .main-image-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: var(--clr-white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .main-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.3s ease;
+    }
+    .main-image.fade { opacity: 0.5; }
+    .no-image-placeholder {
+      font-size: 3rem;
+      color: rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .no-image-placeholder span { font-size: 1rem; font-weight: 500; }
+    
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.8);
+      color: var(--clr-primary);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      z-index: 10;
+    }
+    .carousel-btn:hover { background: #fff; transform: translateY(-50%) scale(1.1); color: var(--clr-accent); }
+    .carousel-btn.prev { left: 16px; }
+    .carousel-btn.next { right: 16px; }
+    .carousel-btn:disabled { opacity: 0; pointer-events: none; }
+
+    .thumbnail-strip {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 4px 0;
+      scrollbar-width: none;
+    }
+    .thumbnail-strip::-webkit-scrollbar { display: none; }
+    .thumbnail {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      opacity: 0.6;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .thumbnail:hover { opacity: 1; }
+    .thumbnail.active {
+      border-color: var(--clr-accent);
+      opacity: 1;
+    }
+
+    /* ---------- Right Column (Details) ---------- */
+    .listing-details {
+      background: var(--clr-white);
+      padding: 32px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .breadcrumb {
+      font-size: 0.9rem;
+      color: var(--clr-accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .listing-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--clr-primary);
+      line-height: 1.2;
+    }
+    .listing-price {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--clr-accent);
+    }
+    .badges {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: var(--clr-light);
+      color: var(--clr-text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge.condition { background: rgba(233, 69, 96, 0.1); color: var(--clr-accent); }
+    .listing-meta {
+      font-size: 0.95rem;
+      color: var(--clr-text);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .listing-meta p { display: flex; align-items: center; gap: 8px; }
+    .listing-meta i { color: var(--clr-accent2); width: 16px; text-align: center; }
+    
+    .divider { height: 1px; background: rgba(0,0,0,0.06); width: 100%; margin: 4px 0; }
+
+    /* Seller Card */
+    .seller-card {
+      background: var(--clr-light);
+      padding: 16px 20px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .seller-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--clr-accent), #0f3460);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    .seller-info h4 { font-size: 1rem; color: var(--clr-primary); margin-bottom: 2px; }
+    .seller-info p { font-size: 0.85rem; color: var(--clr-text); }
+
+    /* Action Buttons */
+    .actions-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .btn-action {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .btn-fav {
+      background: transparent;
+      border-color: var(--clr-accent);
+      color: var(--clr-accent);
+    }
+    .btn-fav:hover { background: rgba(233,69,96,0.05); }
+    .btn-fav.active { background: var(--clr-accent); color: #fff; }
+    
+    .btn-message {
+      background: var(--clr-accent2);
+      color: #fff;
+    }
+    .btn-message:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      position: relative;
+    }
+    
+    /* Owner Buttons */
+    .owner-actions {
+      display: none; /* toggled via js */
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .btn-edit { background: var(--clr-light); border-color: #ddd; color: var(--clr-primary); }
+    .btn-edit:hover { border-color: var(--clr-primary); }
+    .btn-delete { background: transparent; border-color: #dc3545; color: #dc3545; }
+    .btn-delete:hover { background: #dc3545; color: #fff; }
+
+    /* ---------- Full-width Description ---------- */
+    .description-section {
+      background: var(--clr-white);
+      padding: 40px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-top: 10px;
+    }
+    .description-section h3 {
+      font-size: 1.4rem;
+      color: var(--clr-primary);
+      margin-bottom: 20px;
+    }
+    .description-content {
+      white-space: pre-wrap;
+      line-height: 1.8;
+      font-size: 1rem;
+      color: var(--clr-text);
+    }
+
+    /* ---------- Delete Modal ---------- */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; z-index: 2000;
+      opacity: 0; visibility: hidden; transition: var(--transition);
+    }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
+    .modal {
+      background: #fff; padding: 32px; border-radius: var(--radius); width: 90%; max-width: 400px;
+      text-align: center; transform: translateY(20px) scale(0.95); transition: var(--transition);
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-overlay.show .modal { transform: translateY(0) scale(1); }
+    .modal h3 { color: var(--clr-primary); margin-bottom: 12px; font-size: 1.3rem; }
+    .modal p { color: var(--clr-text); margin-bottom: 24px; font-size: 0.95rem; }
+    .modal-actions { display: flex; gap: 12px; }
+    .modal-btn { flex: 1; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; transition: var(--transition); }
+    .modal-btn-cancel { background: var(--clr-light); color: var(--clr-text); }
+    .modal-btn-cancel:hover { background: #e2e2e2; }
+    .modal-btn-confirm { background: #dc3545; color: #fff; }
+    .modal-btn-confirm:hover { background: #c82333; }
+
+    /* ---------- State Messages ---------- */
+    .error-state, .loading-state {
+      text-align: center;
+      padding: 100px 20px;
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .error-state h2 { color: var(--clr-primary); margin-bottom: 16px; }
+    .error-state p { color: var(--clr-text); margin-bottom: 24px; }
+    .btn-home { background: var(--clr-accent); color: #fff; padding: 12px 24px; border-radius: 50px; font-weight: 600; display: inline-flex; }
+
+    @media (max-width: 900px) {
+      .listing-grid { grid-template-columns: 1fr; }
+      .main-image-container { aspect-ratio: 16 / 9; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Preloader -->
+  <div id="preloader"><div class="loader-ring"></div></div>
+  <!-- Back-to-top -->
+  <button id="backToTop" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">Nexus<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/browse">Browse</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/about">About</a></li>
+        <li data-auth="guest"><a href="/login" class="btn-link">Sign In</a></li>
+        <li data-auth="guest"><a href="/signup" class="nav-cta">Get Started</a></li>
+        <li data-auth="user"><a href="/create-listing" class="nav-cta"><i class="fas fa-plus"></i> Post Ad</a></li>
+        <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+        <li data-auth="user"><a href="/messages"><i class="fas fa-comment-dots"></i> Messages</a></li>
+        <li data-auth="user"><a href="/favorites" class="nav-fav-link"><i class="fas fa-heart"></i></a></li>
+        <li data-auth="user" class="nav-user-menu">
+          <button class="user-nav-avatar" id="navAvatar" aria-label="User menu"></button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div id="contentArea">
+      <!-- Loading State -->
+      <div class="loading-state" id="loadingState">
+        <div class="loader-ring" style="margin: 0 auto; border-color: var(--clr-primary); border-top-color: transparent;"></div>
+        <p style="margin-top: 16px;">Loading listing details...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Delete Modal -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <h3>Delete Listing?</h3>
+      <p>Are you sure you want to remove this listing? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">Nexus<span>.</span></a>
+          <p>Your trusted marketplace for buying and selling pre-owned goods. Find great deals or turn your unused items into cash.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Dribbble"><i class="fab fa-dribbble"></i></a>
+          </div>
+        </div>
+        <div><h4>Marketplace</h4><ul><li><a href="/browse">Browse Listings</a></li><li><a href="/create-listing">Post an Ad</a></li><li><a href="/favorites">My Favorites</a></li></ul></div>
+        <div><h4>Company</h4><ul><li><a href="/about">About Us</a></li><li><a href="/services">Services</a></li><li><a href="/testimonials">Testimonials</a></li></ul></div>
+        <div><h4>Support</h4><ul><li><a href="#">Contact</a></li><li><a href="#">FAQ</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nexus. All rights reserved.</p>
+        <p>Made with <i class="fas fa-heart"></i> in India</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  
+  <script>
+    // --- Utilities ---
+    // Preloader
+    window.addEventListener('load', () => { const p = document.getElementById('preloader'); if(p) p.classList.add('hidden'); });
+
+    // Navbar scroll
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+    });
+    // Trigger once on load
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+
+    // Hamburger
+    document.getElementById('hamburger')?.addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+
+    // Back to top
+    const btt = document.getElementById('backToTop');
+    if (btt) {
+      window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 600));
+      btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+    
+    function timeAgo(dateParam) {
+      if (!dateParam) return null;
+      const date = typeof dateParam === 'object' ? dateParam : new Date(dateParam);
+      const today = new Date();
+      const seconds = Math.round((today - date) / 1000);
+      const minutes = Math.round(seconds / 60);
+      const hours = Math.round(minutes / 60);
+      const days = Math.round(hours / 24);
+      const months = Math.round(days / 30);
+      const years = Math.round(days / 365);
+
+      if (seconds < 60) return 'Just now';
+      else if (minutes < 60) return minutes + ' minute' + (minutes > 1 ? 's' : '') + ' ago';
+      else if (hours < 24) return hours + ' hour' + (hours > 1 ? 's' : '') + ' ago';
+      else if (days < 30) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+      else if (months < 12) return months + ' month' + (months > 1 ? 's' : '') + ' ago';
+      else return years + ' year' + (years > 1 ? 's' : '') + ' ago';
+    }
+
+    // --- Page Logic ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const listingId = urlParams.get('id');
+    
+    let listing = null;
+    let isFavorited = false;
+    let currentImageIndex = 0;
+    
+    async function loadListing() {
+      const contentArea = document.getElementById('contentArea');
+      
+      if (!listingId) {
+        showError('No listing specified.', 'Please select a valid listing to view.');
+        return;
+      }
+      
+      try {
+        listing = await window.api.get(`/api/listings/${listingId}`);
+        renderListing();
+        
+        // Wait for auth to resolve before checking favorites/ownership
+        if (window.currentUser === undefined) {
+          window.addEventListener('authReady', setupUserFeatures);
+        } else {
+          setupUserFeatures();
+        }
+      } catch (err) {
+        showError('Listing not found', 'The listing you are looking for may have been removed or does not exist.');
+      }
+    }
+    
+    function showError(title, message) {
+      document.getElementById('contentArea').innerHTML = `
+        <div class="error-state reveal">
+          <h2>${title}</h2>
+          <p>${message}</p>
+          <a href="/browse" class="btn-home">Back to Browse</a>
+        </div>
+      `;
+      revealElements();
+    }
+    
+    function renderListing() {
+      const { title, price, description, condition, location, category, seller, images, createdAt } = listing;
+      
+      const hasImages = images && images.length > 0;
+      let imagesHtml = '';
+      let thumbsHtml = '';
+      
+      if (hasImages) {
+        imagesHtml = `<img src="${images[0].url}" alt="${title}" class="main-image" id="mainImage">`;
+        if (images.length > 1) {
+          imagesHtml += `
+            <button class="carousel-btn prev" onclick="changeImage(-1)"><i class="fas fa-chevron-left"></i></button>
+            <button class="carousel-btn next" onclick="changeImage(1)"><i class="fas fa-chevron-right"></i></button>
+          `;
+          
+          thumbsHtml = '<div class="thumbnail-strip" id="thumbnailStrip">';
+          images.forEach((img, idx) => {
+            thumbsHtml += `<img src="${img.url}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="setImage(${idx})" alt="Thumbnail ${idx+1}">`;
+          });
+          thumbsHtml += '</div>';
+        }
+      } else {
+        imagesHtml = `
+          <div class="no-image-placeholder">
+            <i class="far fa-image"></i>
+            <span>No image available</span>
+          </div>
+        `;
+      }
+      
+      const formattedPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+      const catName = category ? (category.name || 'Category') : 'Uncategorized';
+      const sellerInitials = seller && seller.name ? seller.name.charAt(0).toUpperCase() : '?';
+      const sellerName = seller && seller.name ? seller.name : 'Unknown Seller';
+      const sellerDate = seller && seller.createdAt ? `Member since ${new Date(seller.createdAt).getFullYear()}` : '';
+      const conditionUpper = condition ? condition.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown';
+      
+      document.getElementById('contentArea').innerHTML = `
+        <div class="listing-grid">
+          <!-- Left Column: Images -->
+          <div class="listing-images reveal-left">
+            <div class="main-image-container">
+              ${imagesHtml}
+            </div>
+            ${thumbsHtml}
+          </div>
+          
+          <!-- Right Column: Details -->
+          <div class="listing-details reveal-right">
+            <div class="breadcrumb">${catName}</div>
+            <h1 class="listing-title">${title}</h1>
+            <div class="listing-price">${formattedPrice}</div>
+            
+            <div class="badges">
+              <span class="badge condition"><i class="fas fa-tag"></i> ${conditionUpper}</span>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="listing-meta">
+              <p><i class="fas fa-map-marker-alt"></i> ${location || 'Location not specified'}</p>
+              <p><i class="far fa-clock"></i> Posted ${timeAgo(createdAt)}</p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="seller-card">
+              <div class="seller-avatar">${sellerInitials}</div>
+              <div class="seller-info">
+                <h4>${sellerName}</h4>
+                <p>${sellerDate}</p>
+              </div>
+            </div>
+            
+            <div class="actions-grid">
+              <button class="btn-action btn-fav" id="favBtn" onclick="toggleFavorite()">
+                <i class="far fa-heart" id="favIcon"></i> <span>Save to Favorites</span>
+              </button>
+              <button class="btn-action btn-message" id="messageBtn" onclick="messageSeller()">
+                <i class="far fa-envelope"></i> Message Seller
+              </button>
+            </div>
+            
+            <div class="owner-actions" id="ownerActions">
+              <div class="divider"></div>
+              <a href="/create-listing?id=${listingId}" class="btn-action btn-edit">
+                <i class="fas fa-pencil-alt"></i> Edit Listing
+              </a>
+              <button class="btn-action btn-delete" onclick="openDeleteModal()">
+                <i class="far fa-trash-alt"></i> Delete Listing
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="description-section reveal">
+          <h3>Description</h3>
+          <div class="description-content">${description}</div>
+        </div>
+      `;
+      
+      revealElements();
+    }
+    
+    function revealElements() {
+      const ro = new IntersectionObserver((entries) => { 
+        entries.forEach(e => { 
+          if (e.isIntersecting) { 
+            e.target.classList.add('visible'); 
+            ro.unobserve(e.target); 
+          } 
+        }); 
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => ro.observe(el));
+    }
+    
+    window.changeImage = function(dir) {
+      if (!listing || !listing.images || listing.images.length <= 1) return;
+      let newIdx = currentImageIndex + dir;
+      if (newIdx < 0) newIdx = listing.images.length - 1;
+      if (newIdx >= listing.images.length) newIdx = 0;
+      setImage(newIdx);
+    };
+    
+    window.setImage = function(idx) {
+      if (!listing || !listing.images || !listing.images[idx]) return;
+      currentImageIndex = idx;
+      
+      const imgEl = document.getElementById('mainImage');
+      imgEl.classList.add('fade');
+      
+      setTimeout(() => {
+        imgEl.src = listing.images[idx].url;
+        imgEl.classList.remove('fade');
+      }, 150);
+      
+      document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
+        if (i === idx) thumb.classList.add('active');
+        else thumb.classList.remove('active');
+      });
+    };
+    
+    async function setupUserFeatures() {
+      if (!window.currentUser) return; // Guest viewing
+      
+      // Check ownership
+      const sellerId = listing.seller && (listing.seller._id || listing.seller.id || listing.seller);
+      if (sellerId && sellerId === window.currentUser.id) {
+        document.getElementById('ownerActions').style.display = 'flex';
+        // Hide message button for own listings
+        const msgBtn = document.getElementById('messageBtn');
+        if (msgBtn) msgBtn.style.display = 'none';
+      }
+      
+      // Check favorite status
+      try {
+        const favs = await window.api.get('/api/favorites');
+        isFavorited = favs.some(f => {
+          const lId = f.listing && f.listing._id ? f.listing._id : f.listing;
+          return lId === listingId;
+        });
+        updateFavBtn();
+      } catch (err) {
+        console.error("Error checking favorites", err);
+      }
+    }
+    
+    window.toggleFavorite = async function() {
+      if (!window.requireAuth()) return;
+      
+      const btn = document.getElementById('favBtn');
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.7';
+      
+      try {
+        if (isFavorited) {
+          await window.api.delete(`/api/favorites/${listingId}`);
+          isFavorited = false;
+        } else {
+          await window.api.post('/api/favorites', { listingId });
+          isFavorited = true;
+        }
+        updateFavBtn();
+      } catch (err) {
+        alert("Failed to update favorites. Please try again.");
+      } finally {
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+      }
+    };
+    
+    function updateFavBtn() {
+      const btn = document.getElementById('favBtn');
+      const icon = document.getElementById('favIcon');
+      const span = btn.querySelector('span');
+      
+      if (isFavorited) {
+        btn.classList.add('active');
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+        span.textContent = 'Saved to Favorites';
+      } else {
+        btn.classList.remove('active');
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+        span.textContent = 'Save to Favorites';
+      }
+    }
+    
+    // --- Delete Modal Logic ---
+    window.openDeleteModal = function() {
+      document.getElementById('deleteModal').classList.add('show');
+    };
+    
+    window.closeDeleteModal = function() {
+      document.getElementById('deleteModal').classList.remove('show');
+    };
+    
+    document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('confirmDeleteBtn');
+      btn.textContent = 'Deleting...';
+      btn.disabled = true;
+      
+      try {
+        await window.api.delete(`/api/listings/${listingId}`);
+        window.location.href = '/my-listings';
+      } catch (err) {
+        alert(err.message || 'Failed to delete listing.');
+        btn.textContent = 'Delete';
+        btn.disabled = false;
+        closeDeleteModal();
+      }
+    });
+    
+    // Close modal on outside click
+    document.getElementById('deleteModal').addEventListener('click', (e) => {
+      if (e.target.id === 'deleteModal') closeDeleteModal();
+    });
+
+    // --- Message Seller ---
+    window.messageSeller = async function() {
+      if (!window.requireAuth()) return;
+      
+      const btn = document.getElementById('messageBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening chat...';
+      }
+      
+      try {
+        const data = await window.api.post('/api/conversations', { listingId });
+        const conversationId = data._id || data.id;
+        window.location.href = '/messages?conversationId=' + conversationId;
+      } catch (err) {
+        alert(err.message || 'Failed to start conversation');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="far fa-envelope"></i> Message Seller';
+        }
+      }
+    };
+
+    // Start
+    loadListing();
+  </script>
+</body>
+</html>
