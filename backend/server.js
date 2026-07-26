@@ -12,6 +12,7 @@ const categoriesRouter = require('./routes/categories');
 const favoritesRouter = require('./routes/favorites');
 const usersRouter = require('./routes/users');
 const uploadsRouter = require('./routes/uploads');
+const conversationsRouter = require('./routes/messages');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -120,6 +121,7 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/favorites', favoritesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/uploads', uploadsRouter);
+app.use('/api/conversations', conversationsRouter);
 
 // --- Serve HTML pages with proper routes ---
 app.get('/login', (req, res) => {
@@ -177,6 +179,7 @@ function requireAuthPage(page) {
 app.get('/create-listing', requireAuthPage('create-listing.html'));
 app.get('/my-listings', requireAuthPage('my-listings.html'));
 app.get('/favorites', requireAuthPage('favorites.html'));
+app.get('/messages', requireAuthPage('messages.html'));
 
 // --- Centralized error handler (must be last) ---
 app.use(errorHandler);

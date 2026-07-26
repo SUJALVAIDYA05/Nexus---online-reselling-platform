@@ -446,6 +446,7 @@
         <li data-auth="guest"><a href="/signup" class="nav-cta">Get Started</a></li>
         <li data-auth="user"><a href="/create-listing" class="nav-cta"><i class="fas fa-plus"></i> Post Ad</a></li>
         <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+        <li data-auth="user"><a href="/messages"><i class="fas fa-comment-dots"></i> Messages</a></li>
         <li data-auth="user"><a href="/favorites" class="nav-fav-link"><i class="fas fa-heart"></i></a></li>
         <li data-auth="user" class="nav-user-menu">
           <button class="user-nav-avatar" id="navAvatar" aria-label="User menu"></button>
@@ -673,7 +674,7 @@
               <button class="btn-action btn-fav" id="favBtn" onclick="toggleFavorite()">
                 <i class="far fa-heart" id="favIcon"></i> <span>Save to Favorites</span>
               </button>
-              <button class="btn-action btn-message" title="Coming Soon" disabled>
+              <button class="btn-action btn-message" id="messageBtn" onclick="messageSeller()">
                 <i class="far fa-envelope"></i> Message Seller
               </button>
             </div>
@@ -744,6 +745,9 @@
       const sellerId = listing.seller && (listing.seller._id || listing.seller.id || listing.seller);
       if (sellerId && sellerId === window.currentUser.id) {
         document.getElementById('ownerActions').style.display = 'flex';
+        // Hide message button for own listings
+        const msgBtn = document.getElementById('messageBtn');
+        if (msgBtn) msgBtn.style.display = 'none';
       }
       
       // Check favorite status
@@ -830,6 +834,29 @@
     document.getElementById('deleteModal').addEventListener('click', (e) => {
       if (e.target.id === 'deleteModal') closeDeleteModal();
     });
+
+    // --- Message Seller ---
+    window.messageSeller = async function() {
+      if (!window.requireAuth()) return;
+      
+      const btn = document.getElementById('messageBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening chat...';
+      }
+      
+      try {
+        const data = await window.api.post('/api/conversations', { listingId });
+        const conversationId = data._id || data.id;
+        window.location.href = '/messages?conversationId=' + conversationId;
+      } catch (err) {
+        alert(err.message || 'Failed to start conversation');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="far fa-envelope"></i> Message Seller';
+        }
+      }
+    };
 
     // Start
     loadListing();
