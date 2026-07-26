@@ -1,0 +1,55 @@
+.spinner-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-svg {
+  animation: spin 0.8s linear infinite;
+}
+
+.page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-loader-text {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.skeleton-card {
+  overflow: hidden;
+}
+
+.skeleton-card-image {
+  height: 200px;
+  border-radius: 0;
+}
+
+.skeleton-card-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-line-lg {
+  height: 16px;
+  width: 80%;
+}
+
+.skeleton-line-md {
+  height: 14px;
+  width: 50%;
+}
+
+.skeleton-line-sm {
+  height: 20px;
+  width: 40%;
+}

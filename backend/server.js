@@ -26,8 +26,9 @@ if (!JWT_SECRET) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Serve the React SPA build
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(frontendDist));
 
 // Cookie parser (lightweight, no extra dep)
 app.use((req, res, next) => {
@@ -124,62 +125,21 @@ app.use('/api/uploads', uploadsRouter);
 app.use('/api/conversations', conversationsRouter);
 
 // --- Serve HTML pages with proper routes ---
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
-});
-app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'signup.html'));
-});
-app.get('/services', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'services.html'));
-});
-app.get('/about', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'about.html'));
-});
-app.get('/testimonials', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'testimonials.html'));
-});
-app.get('/dashboard', (req, res) => {
-  const token = req.cookies?.token;
-  if (!token) return res.redirect('/login');
-  try {
-    const jwt = require('jsonwebtoken');
-    jwt.verify(token, JWT_SECRET);
-    res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
-  } catch {
-    res.redirect('/login');
-  }
-});
+// The original /browse page is preserved as-is per project constraints.
+// All other pages are now served by the React SPA.
 
-// --- Marketplace pages ---
-const publicDir = path.join(__dirname, '..', 'public');
-
-// Public marketplace pages
+// Keep the original browse page untouched
 app.get('/browse', (_req, res) => {
-  res.sendFile(path.join(publicDir, 'browse.html'));
-});
-app.get('/listing-detail', (_req, res) => {
-  res.sendFile(path.join(publicDir, 'listing-detail.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'browse.html'));
 });
 
-// Protected marketplace pages (require auth cookie)
-function requireAuthPage(page) {
-  return (req, res) => {
-    const token = req.cookies?.token;
-    if (!token) return res.redirect('/login');
-    try {
-      const jwt = require('jsonwebtoken');
-      jwt.verify(token, JWT_SECRET);
-      res.sendFile(path.join(publicDir, page));
-    } catch {
-      res.redirect('/login');
-    }
-  };
-}
-app.get('/create-listing', requireAuthPage('create-listing.html'));
-app.get('/my-listings', requireAuthPage('my-listings.html'));
-app.get('/favorites', requireAuthPage('favorites.html'));
-app.get('/messages', requireAuthPage('messages.html'));
+// --- React SPA catch-all: serve index.html for all non-API, non-browse routes ---
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.sendFile(path.join(frontendDist, 'index.html'));
+});
 
 // --- Centralized error handler (must be last) ---
 app.use(errorHandler);

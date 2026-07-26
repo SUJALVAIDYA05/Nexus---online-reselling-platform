@@ -1,0 +1,22 @@
+.dashboard-layout {
+  display: flex;
+  min-height: calc(100vh - var(--nav-height));
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 36px 40px;
+  max-width: 1080px;
+  width: 100%;
+  animation: fadeInUp 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  .dashboard-main {
+    padding: 20px 16px;
+  }
+}

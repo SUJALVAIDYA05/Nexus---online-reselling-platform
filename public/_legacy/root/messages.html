@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages — Nexus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --clr-primary: #1a1a2e;
+      --clr-accent:  #e94560;
+      --clr-accent2: #0f3460;
+      --clr-dark:    #16213e;
+      --clr-light:   #f8f9fa;
+      --clr-text:    #4a4a5a;
+      --clr-white:   #ffffff;
+      --radius:      16px;
+      --shadow:      0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg:   0 12px 48px rgba(0,0,0,.12);
+      --transition:  0.3s cubic-bezier(.4,0,.2,1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--clr-light); color: var(--clr-text); line-height: 1.6; }
+    .container { width: 90%; max-width: 1200px; margin: 0 auto; }
+
+    /* Navbar */
+    .navbar { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; padding: 18px 0; transition: var(--transition); }
+    .navbar.scrolled { background: rgba(26,26,46,.92); backdrop-filter: blur(14px); padding: 12px 0; box-shadow: 0 4px 30px rgba(0,0,0,.15); }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.6rem; font-weight: 800; color: #fff; text-decoration: none; }
+    .navbar:not(.scrolled) .logo { color: var(--clr-primary); }
+    .logo span { color: var(--clr-accent); }
+    .nav-links { list-style: none; display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: rgba(26,26,46,.8); text-decoration: none; font-weight: 500; font-size: .95rem; transition: color var(--transition); }
+    .navbar.scrolled .nav-links a { color: rgba(255,255,255,.8); }
+    .nav-links a:hover, .nav-links a.active { color: var(--clr-primary); }
+    .navbar.scrolled .nav-links a:hover, .navbar.scrolled .nav-links a.active { color: #fff; }
+    .navbar.scrolled .btn-link { color: rgba(255,255,255,.9) !important; }
+    .nav-cta { background: var(--clr-accent); color: #fff !important; padding: 10px 22px; border-radius: 50px; font-weight: 600 !important; transition: all var(--transition); display:inline-flex;align-items:center;gap:6px; }
+    .nav-cta:hover { background: #d63d56; transform: translateY(-2px); }
+    .nav-fav-link { font-size: 1.05rem; }
+
+    /* User avatar dropdown */
+    .nav-user-menu { position: relative; }
+    .user-nav-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--clr-accent), #0f3460); color: #fff; font-weight: 700; font-size: .9rem; border: 2px solid rgba(255,255,255,.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: all .2s ease; }
+    .navbar:not(.scrolled) .user-nav-avatar { border-color: rgba(26,26,46,.2); }
+    .user-nav-avatar:hover { border-color: #fff; transform: scale(1.08); }
+    .navbar:not(.scrolled) .user-nav-avatar:hover { border-color: var(--clr-primary); }
+    .nav-dropdown { position: absolute; top: calc(100% + 10px); right: 0; min-width: 180px; background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all .25s ease; overflow: hidden; z-index: 50; }
+    .nav-user-menu:hover .nav-dropdown, .nav-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .nav-dropdown a, .nav-dropdown button { display: flex; align-items: center; gap: 10px; padding: 12px 18px; color: var(--clr-text); text-decoration: none; font-size: .9rem; font-weight: 500; border: none; background: none; width: 100%; cursor: pointer; font-family: inherit; transition: background .15s ease; }
+    .nav-dropdown a:hover, .nav-dropdown button:hover { background: var(--clr-light); color: var(--clr-accent); }
+
+    /* Auth visibility */
+    [data-auth="user"] { display: none; }
+
+    /* Hamburger */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--clr-primary); margin: 5px 0; border-radius: 2px; transition: var(--transition); }
+    .navbar.scrolled .hamburger span { background: #fff; }
+
+    @media (max-width: 868px) {
+      .hamburger { display: block; }
+      .nav-links { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: var(--clr-primary); flex-direction: column; padding: 80px 32px 32px; gap: 20px; transition: right .35s ease; z-index: 999; }
+      .nav-links.open { right: 0; }
+      .nav-user-menu { width: 100%; }
+      .nav-dropdown { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; background: rgba(255,255,255,.08); border-radius: 8px; margin-top: 8px; }
+      .nav-dropdown a, .nav-dropdown button { color: rgba(255,255,255,.8); }
+      .nav-dropdown a:hover, .nav-dropdown button:hover { background: rgba(255,255,255,.1); color: #fff; }
+      .nav-links a { color: rgba(255,255,255,.8); }
+      .nav-links a:hover, .nav-links a.active { color: #fff; }
+    }
+
+    /* Footer */
+    footer { background: var(--clr-primary); color: rgba(255,255,255,.7); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+    .footer-brand p { margin: 16px 0; font-size: .9rem; line-height: 1.7; }
+    .footer-social { display: flex; gap: 12px; }
+    .footer-social a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6); transition: all var(--transition); }
+    .footer-social a:hover { background: var(--clr-accent); border-color: var(--clr-accent); color: #fff; }
+    footer h4 { color: #fff; margin-bottom: 20px; font-size: 1rem; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 10px; }
+    footer ul a { color: rgba(255,255,255,.6); text-decoration: none; font-size: .9rem; transition: color var(--transition); }
+    footer ul a:hover { color: var(--clr-accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); margin-top: 40px; padding: 20px 0; display: flex; justify-content: space-between; font-size: .85rem; }
+    .footer-bottom .fa-heart { color: var(--clr-accent); }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+
+    /* Preloader */
+    #preloader { position: fixed; inset: 0; background: var(--clr-primary); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .5s ease; }
+    #preloader.hidden { opacity: 0; pointer-events: none; }
+    .loader-ring { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,.1); border-top-color: var(--clr-accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Back-to-top */
+    #backToTop { position: fixed; bottom: 32px; right: 32px; width: 44px; height: 44px; border-radius: 50%; background: var(--clr-accent); color: #fff; border: none; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transform: translateY(20px); transition: all .3s ease; z-index: 100; }
+    #backToTop.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    #backToTop:hover { background: #d63d56; transform: translateY(-3px); }
+
+    /* CHAT LAYOUT */
+    main.container { padding-top: 100px; display: flex; flex-direction: column; min-height: calc(100vh - 10px); padding-bottom: 40px; }
+    
+    .chat-layout {
+      display: flex;
+      gap: 24px;
+      flex: 1;
+      height: calc(100vh - 160px);
+      min-height: 500px;
+    }
+
+    /* Left Panel */
+    .conversations-panel {
+      width: 340px;
+      background: var(--clr-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .panel-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-header h2 { font-size: 1.25rem; color: var(--clr-primary); }
+    .msg-count { font-size: 0.85rem; color: var(--clr-text); background: var(--clr-light); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+
+    .conversations-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .conversations-list::-webkit-scrollbar { width: 6px; }
+    .conversations-list::-webkit-scrollbar-track { background: transparent; }
+    .conversations-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+
+    .conversation-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+    .conversation-item:hover { background: var(--clr-light); }
+    .conversation-item.active { background: rgba(233, 69, 96, 0.08); }
+
+    .conversation-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #eee;
+    }
+
+    .conversation-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .conversation-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .conversation-name {
+      font-weight: 600;
+      color: var(--clr-primary);
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conversation-name.unread { font-weight: 800; color: var(--clr-primary); }
+    .conversation-time { font-size: 0.75rem; color: var(--clr-text); }
+    .conversation-listing { font-size: 0.8rem; color: var(--clr-text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+    .conversation-snippet { font-size: 0.85rem; color: rgba(74,74,90,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .unread-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--clr-accent);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(233,69,96, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(233,69,96, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(233,69,96, 0); }
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--clr-text);
+      opacity: 0.7;
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 16px; color: rgba(74,74,90,0.4); }
+    .empty-state p { font-size: 0.95rem; }
+
+    /* Right Panel */
+    .thread-panel {
+      flex: 1;
+      background: var(--clr-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .thread-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--clr-text);
+      opacity: 0.6;
+    }
+    .thread-empty i { font-size: 4rem; margin-bottom: 24px; color: var(--clr-text); opacity: 0.5; }
+    .thread-empty h3 { font-size: 1.25rem; color: var(--clr-primary); margin-bottom: 8px; }
+
+    .thread-content {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+    .thread-content.active { display: flex; }
+
+    .thread-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #fff;
+    }
+
+    .back-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: var(--clr-primary);
+      cursor: pointer;
+      padding: 8px;
+      margin-left: -8px;
+    }
+
+    .thread-header-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #eee;
+    }
+
+    .thread-header-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .thread-listing-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .thread-listing-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--clr-primary);
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .thread-listing-title:hover { color: var(--clr-accent); }
+
+    .thread-listing-price {
+      color: var(--clr-accent);
+      font-weight: 700;
+      background: rgba(233, 69, 96, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .thread-other-user {
+      font-size: 0.85rem;
+      color: var(--clr-text);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .user-avatar-sm {
+      width: 20px;
+      height: 20px;
+      background: var(--clr-accent2);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: bold;
+    }
+
+    .messages-area {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #fcfcfc;
+    }
+
+    .messages-area::-webkit-scrollbar { width: 8px; }
+    .messages-area::-webkit-scrollbar-track { background: transparent; }
+    .messages-area::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+
+    .date-separator {
+      text-align: center;
+      margin: 16px 0;
+      position: relative;
+    }
+    .date-separator span {
+      background: #fcfcfc;
+      padding: 0 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(74,74,90,0.6);
+      position: relative;
+      z-index: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .date-separator::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(0,0,0,0.06);
+      z-index: 0;
+    }
+
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+      animation: fadeIn 0.3s ease forwards;
+      opacity: 0;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .msg-wrapper.received { align-self: flex-start; }
+    .msg-wrapper.sent { align-self: flex-end; }
+
+    .msg-bubble-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    
+    .msg-wrapper.sent .msg-bubble-container { justify-content: flex-end; }
+
+    .msg-bubble {
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .msg-wrapper.received .msg-bubble {
+      background: #fff;
+      color: var(--clr-primary);
+      border-radius: 18px 18px 18px 4px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .msg-wrapper.sent .msg-bubble {
+      background: var(--clr-accent2);
+      color: #fff;
+      border-radius: 18px 18px 4px 18px;
+    }
+
+    .msg-time {
+      font-size: 0.7rem;
+      color: rgba(74,74,90,0.6);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .msg-wrapper.sent .msg-time { justify-content: flex-end; }
+
+    .input-bar {
+      padding: 16px 24px;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      background: #fff;
+    }
+
+    .input-form {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .input-form input {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: 24px;
+      border: 1px solid rgba(0,0,0,0.1);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: var(--transition);
+      background: var(--clr-light);
+    }
+    .input-form input:focus {
+      outline: none;
+      border-color: var(--clr-accent);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(233,69,96,0.1);
+    }
+
+    .btn-send {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--clr-accent);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: var(--transition);
+    }
+    .btn-send:hover:not(:disabled) { background: #d63d56; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(233,69,96,0.3); }
+    .btn-send:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
+    .btn-send i { transition: transform 0.2s; }
+    .btn-send:not(:disabled):hover i { transform: translate(2px, -2px); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .chat-layout { height: calc(100vh - 120px); margin-bottom: 20px; }
+      .conversations-panel { width: 100%; border-radius: 12px; }
+      .thread-panel { display: none; width: 100%; border-radius: 12px; }
+      .chat-layout.thread-open .conversations-panel { display: none; }
+      .chat-layout.thread-open .thread-panel { display: flex; }
+      .back-btn { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Preloader -->
+  <div id="preloader"><div class="loader-ring"></div></div>
+  <!-- Back-to-top -->
+  <button id="backToTop" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <a href="/" class="logo">Nexus<span>.</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/browse">Browse</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/about">About</a></li>
+        <li data-auth="guest"><a href="/login" class="btn-link">Sign In</a></li>
+        <li data-auth="guest"><a href="/signup" class="nav-cta">Get Started</a></li>
+        <li data-auth="user"><a href="/create-listing" class="nav-cta"><i class="fas fa-plus"></i> Post Ad</a></li>
+        <li data-auth="user"><a href="/my-listings">My Listings</a></li>
+        <li data-auth="user"><a href="/messages" class="active"><i class="fas fa-comment-dots"></i> Messages</a></li>
+        <li data-auth="user"><a href="/favorites" class="nav-fav-link"><i class="fas fa-heart"></i></a></li>
+        <li data-auth="user" class="nav-user-menu">
+          <button class="user-nav-avatar" id="navAvatar" aria-label="User menu"></button>
+          <div class="nav-dropdown" id="navDropdown">
+            <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <button onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="container">
+    <div class="chat-layout" id="chatLayout">
+      <!-- Left Panel: Conversations -->
+      <div class="conversations-panel">
+        <div class="panel-header">
+          <h2>Messages</h2>
+          <span class="msg-count" id="msgCount">0</span>
+        </div>
+        <div class="conversations-list" id="conversationsList">
+          <!-- Loaded via JS -->
+          <div class="empty-state">
+            <div class="loader-ring" style="border-top-color: var(--clr-primary); width: 32px; height: 32px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Thread -->
+      <div class="thread-panel">
+        <!-- Empty State -->
+        <div class="thread-empty" id="threadEmpty">
+          <i class="fas fa-comments"></i>
+          <h3>Your Messages</h3>
+          <p>Select a conversation to start chatting</p>
+        </div>
+
+        <!-- Active Thread -->
+        <div class="thread-content" id="threadContent">
+          <div class="thread-header">
+            <button class="back-btn" id="backToList"><i class="fas fa-arrow-left"></i></button>
+            <img src="" alt="Listing" class="thread-header-img" id="threadListingImg">
+            <div class="thread-header-info">
+              <div class="thread-listing-title-row">
+                <a href="#" class="thread-listing-title" id="threadListingTitle">Listing Title</a>
+                <span class="thread-listing-price" id="threadListingPrice">$0</span>
+              </div>
+              <div class="thread-other-user">
+                <div class="user-avatar-sm" id="threadOtherUserAvatar">U</div>
+                <span id="threadOtherUserName">User Name</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="messages-area" id="messagesArea">
+            <!-- Loaded via JS -->
+          </div>
+
+          <div class="input-bar">
+            <form class="input-form" id="messageForm">
+              <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" required>
+              <button type="submit" class="btn-send" id="btnSend" aria-label="Send message">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">Nexus<span>.</span></a>
+          <p>Your trusted marketplace for buying and selling pre-owned goods. Find great deals or turn your unused items into cash.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Dribbble"><i class="fab fa-dribbble"></i></a>
+          </div>
+        </div>
+        <div><h4>Marketplace</h4><ul><li><a href="/browse">Browse Listings</a></li><li><a href="/create-listing">Post an Ad</a></li><li><a href="/favorites">My Favorites</a></li></ul></div>
+        <div><h4>Company</h4><ul><li><a href="/about">About Us</a></li><li><a href="/services">Services</a></li><li><a href="/testimonials">Testimonials</a></li></ul></div>
+        <div><h4>Support</h4><ul><li><a href="#">Contact</a></li><li><a href="#">FAQ</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nexus. All rights reserved.</p>
+        <p>Made with <i class="fas fa-heart"></i> in India</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    // State
+    let conversations = [];
+    let activeConversationId = null;
+    let messages = [];
+    let pollInterval = null;
+    let lastMessageCount = 0;
+
+    // DOM Elements
+    const chatLayout = document.getElementById('chatLayout');
+    const conversationsList = document.getElementById('conversationsList');
+    const msgCount = document.getElementById('msgCount');
+    const threadEmpty = document.getElementById('threadEmpty');
+    const threadContent = document.getElementById('threadContent');
+    const messagesArea = document.getElementById('messagesArea');
+    const messageForm = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const btnSend = document.getElementById('btnSend');
+    const backToList = document.getElementById('backToList');
+
+    // On page load (after authReady):
+    window.addEventListener('authReady', async () => {
+      if (!window.requireAuth()) return;
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const convId = urlParams.get('conversationId');
+      
+      await loadConversations();
+      
+      if (convId) {
+        openConversation(convId);
+      }
+    });
+
+    // Time formatting helper
+    function timeAgo(dateParam) {
+      if (!dateParam) return '';
+      const date = typeof dateParam === 'object' ? dateParam : new Date(dateParam);
+      const seconds = Math.round((new Date() - date) / 1000);
+      const minutes = Math.round(seconds / 60);
+      const hours = Math.round(minutes / 60);
+      const days = Math.round(hours / 24);
+      if (seconds < 60) return 'Just now';
+      if (minutes < 60) return minutes + 'm ago';
+      if (hours < 24) return hours + 'h ago';
+      if (days < 30) return days + 'd ago';
+      return date.toLocaleDateString();
+    }
+    
+    function formatTime(dateParam) {
+        const date = new Date(dateParam);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Getting the "other" participant
+    function getOtherParticipant(conversation) {
+      if (!conversation.participants) return { name: 'Unknown' };
+      return conversation.participants.find(p => {
+        const pid = p._id || p.id;
+        return pid !== window.currentUser.id;
+      }) || conversation.participants[0] || { name: 'Unknown' };
+    }
+
+    async function loadConversations() {
+      try {
+        const response = await window.api.get('/api/conversations');
+        conversations = response.conversations || [];
+        
+        msgCount.textContent = conversations.length;
+        
+        if (conversations.length === 0) {
+          conversationsList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-inbox"></i>
+              <p>No conversations yet</p>
+            </div>
+          `;
+          return;
+        }
+
+        renderConversations();
+      } catch (err) {
+        console.error('Error loading conversations:', err);
+        conversationsList.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>Failed to load conversations</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderConversations() {
+      conversationsList.innerHTML = conversations.map(conv => {
+        const otherUser = getOtherParticipant(conv);
+        const listing = conv.listing || {};
+        const lastMsg = conv.lastMessage || {};
+        const isActive = conv._id === activeConversationId;
+        
+        // Count unread (basic logic: if unreadCount > 0)
+        // Adjust this depending on the API payload structure.
+        const unreadCount = conv.unreadCount || 0;
+        const isUnread = unreadCount > 0;
+        
+        const imgUrl = listing.images && listing.images.length > 0 ? (listing.images[0].url || listing.images[0]) : '';
+        
+        return `
+          <div class="conversation-item ${isActive ? 'active' : ''}" onclick="openConversation('${conv._id}')">
+            <img src="${imgUrl}" alt="${listing.title || 'Item'}" class="conversation-img">
+            <div class="conversation-info">
+              <div class="conversation-top">
+                <span class="conversation-name ${isUnread ? 'unread' : ''}">${otherUser.name || 'User'}</span>
+                <span class="conversation-time">${timeAgo(conv.lastMessageAt || conv.updatedAt)}</span>
+              </div>
+              <div class="conversation-listing">${listing.title || 'Unknown Listing'}</div>
+              <div class="conversation-snippet">${lastMsg.text || 'No messages yet'}</div>
+            </div>
+            ${isUnread ? '<div class="unread-dot"></div>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function openConversation(id) {
+      activeConversationId = id;
+      
+      const conv = conversations.find(c => c._id === id);
+      if (!conv) return; // Wait for loadConversations if accessed directly via URL
+      
+      // Update URL silently
+      const url = new URL(window.location);
+      url.searchParams.set('conversationId', id);
+      window.history.replaceState({}, '', url);
+      
+      // Render Header
+      const otherUser = getOtherParticipant(conv);
+      const listing = conv.listing || {};
+      
+      document.getElementById('threadListingImg').src = listing.images && listing.images.length > 0 ? (listing.images[0].url || listing.images[0]) : '';
+      const titleLink = document.getElementById('threadListingTitle');
+      titleLink.textContent = listing.title || 'Unknown Listing';
+      titleLink.href = listing._id ? '/listing-detail?id=' + listing._id : '#';
+      document.getElementById('threadListingPrice').textContent = listing.price ? '$' + listing.price : '';
+      
+      document.getElementById('threadOtherUserName').textContent = otherUser.name || 'User';
+      document.getElementById('threadOtherUserAvatar').textContent = (otherUser.name || 'U').charAt(0).toUpperCase();
+
+      // UI Switch
+      threadEmpty.style.display = 'none';
+      threadContent.classList.add('active');
+      chatLayout.classList.add('thread-open');
+      renderConversations(); // Update active state
+      
+      // Load Messages & start polling
+      messagesArea.innerHTML = '<div class="thread-empty"><div class="loader-ring" style="border-top-color: var(--clr-primary); width: 24px; height: 24px;"></div></div>';
+      lastMessageCount = 0;
+      
+      try {
+        await window.api.post(`/api/conversations/${id}/read`);
+      } catch(e) { console.error('Mark read failed', e) }
+
+      await loadMessages();
+      startPolling();
+    }
+
+    async function loadMessages() {
+      if (!activeConversationId) return;
+      
+      try {
+        const response = await window.api.get(`/api/conversations/${activeConversationId}/messages`);
+        messages = response.messages || [];
+        
+        if (messages.length !== lastMessageCount) {
+          renderMessages();
+          scrollToBottom();
+          lastMessageCount = messages.length;
+        }
+      } catch (err) {
+        console.error('Error loading messages:', err);
+      }
+    }
+
+    function renderMessages() {
+      if (messages.length === 0) {
+        messagesArea.innerHTML = `
+          <div class="thread-empty" style="height: 100%;">
+            <p>No messages yet. Send a message to start!</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      let lastDate = '';
+
+      messages.forEach((msg, index) => {
+        const dateObj = new Date(msg.createdAt);
+        const dateStr = dateObj.toLocaleDateString();
+        const isMine = msg.sender === window.currentUser.id || (msg.sender && msg.sender._id === window.currentUser.id);
+        
+        if (dateStr !== lastDate) {
+          html += `
+            <div class="date-separator">
+              <span>${dateStr === new Date().toLocaleDateString() ? 'Today' : dateStr}</span>
+            </div>
+          `;
+          lastDate = dateStr;
+        }
+        
+        // Add staggered delay to animation
+        const delay = Math.min(index * 0.05, 0.5);
+
+        html += `
+          <div class="msg-wrapper ${isMine ? 'sent' : 'received'}" style="animation-delay: ${delay}s">
+            <div class="msg-bubble-container">
+              ${!isMine ? `
+                <div class="user-avatar-sm" style="flex-shrink: 0;">
+                   ${(msg.sender && msg.sender.name ? msg.sender.name.charAt(0) : 'U').toUpperCase()}
+                </div>
+              ` : ''}
+              <div class="msg-bubble">${msg.text}</div>
+            </div>
+            <div class="msg-time">
+              ${formatTime(msg.createdAt)}
+              ${isMine ? '<i class="fas fa-check-double" style="font-size: 0.6rem; margin-left: 4px;"></i>' : ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      messagesArea.innerHTML = html;
+    }
+
+    function scrollToBottom() {
+      messagesArea.scrollTo({
+        top: messagesArea.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+
+    function startPolling() {
+      stopPolling();
+      pollInterval = setInterval(async () => {
+        await loadMessages();
+        await loadConversations();
+      }, 4000);
+    }
+
+    function stopPolling() {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    }
+
+    // Back button for mobile
+    backToList.addEventListener('click', () => {
+      chatLayout.classList.remove('thread-open');
+      stopPolling();
+      activeConversationId = null;
+      
+      const url = new URL(window.location);
+      url.searchParams.delete('conversationId');
+      window.history.replaceState({}, '', url);
+      
+      renderConversations();
+    });
+
+    // Send Message
+    messageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!activeConversationId) return;
+      
+      const text = messageInput.value.trim();
+      if (!text) return;
+      
+      // UI Optimistic Update (Optional)
+      messageInput.value = '';
+      btnSend.disabled = true;
+      btnSend.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      
+      try {
+        await window.api.post(`/api/conversations/${activeConversationId}/messages`, { text });
+        await loadMessages();
+        loadConversations(); // Background update unread counts and last msg
+      } catch (err) {
+        console.error('Failed to send message:', err);
+        alert('Failed to send message. Please try again.');
+        messageInput.value = text; // restore
+      } finally {
+        btnSend.disabled = false;
+        btnSend.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        messageInput.focus();
+      }
+    });
+
+    window.addEventListener('beforeunload', stopPolling);
+
+
+    // --- NAVBAR BOILERPLATE JS ---
+    // Preloader
+    window.addEventListener('load', () => { const p = document.getElementById('preloader'); if(p) p.classList.add('hidden'); });
+
+    // Navbar scroll
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+    });
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
+
+    // Hamburger
+    document.getElementById('hamburger')?.addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+
+    // Back to top
+    const btt = document.getElementById('backToTop');
+    if (btt) {
+      window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 600));
+      btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+  </script>
+</body>
+</html>
