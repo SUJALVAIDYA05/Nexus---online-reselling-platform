@@ -1,14 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Star, Users, TrendingUp, MapPin, Heart, Target, Eye } from 'lucide-react';
+import { ArrowRight, Shield, Star, Heart } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { Card, CardBody } from '../components/ui/Card';
-
-const stats = [
-  { number: '10K+', label: 'Active Listings', icon: TrendingUp },
-  { number: '5K+', label: 'Happy Users', icon: Users },
-  { number: '1K+', label: 'Verified Sellers', icon: Shield },
-  { number: '50+', label: 'Cities Covered', icon: MapPin },
-];
 
 const values = [
   {
@@ -135,27 +128,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section style={styles.section}>
-        <div className="container" style={styles.container}>
-          <div style={styles.sectionHeader}>
-            <span style={styles.sectionTag}>By The Numbers</span>
-            <h2 style={styles.sectionTitle}>Growing Together</h2>
-          </div>
-          <div style={styles.statsGrid}>
-            {stats.map((stat, i) => (
-              <div key={i} style={{ ...styles.statCard, animation: `slideUp 0.4s ease ${0.1 * i}s both` }}>
-                <div style={styles.statIcon}>
-                  <stat.icon size={24} color="var(--accent)" />
-                </div>
-                <span style={styles.statNumber}>{stat.number}</span>
-                <span style={styles.statLabel}>{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Team */}
       <section style={{ ...styles.section, background: 'var(--bg-secondary)' }}>
         <div className="container" style={styles.container}>
@@ -271,20 +243,6 @@ const styles = {
   },
   valueTitle: { fontSize: 20, fontWeight: 700, color: 'var(--text)', margin: '0 0 10px' },
   valueDesc: { fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.7, margin: 0 },
-  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 },
-  statCard: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-    padding: '36px 20px', borderRadius: 'var(--radius-xl)',
-    background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-    boxShadow: 'var(--shadow-card)',
-    transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-  },
-  statIcon: {
-    width: 52, height: 52, borderRadius: 'var(--radius-xl)',
-    background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  statNumber: { fontSize: 32, fontWeight: 900, color: 'var(--text)' },
-  statLabel: { fontSize: 14, color: 'var(--text-tertiary)', fontWeight: 500 },
   teamGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 },
   teamCard: {
     display: 'flex', flexDirection: 'column', alignItems: 'center',

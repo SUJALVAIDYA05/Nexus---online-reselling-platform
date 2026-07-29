@@ -39,4 +39,29 @@ router.get('/:id/listings', optionalAuth, validateObjectId('id'), async (req, re
   }
 });
 
+// ---------------------------------------------------------------------------
+// PUT /api/users/profile  —  update the authenticated user's profile
+// ---------------------------------------------------------------------------
+router.put('/profile', authMiddleware, async (req, res, next) => {
+  try {
+    const { name, phone, location } = req.body;
+
+    const update = {};
+    if (name !== undefined) update.name = name.trim();
+    if (phone !== undefined) update.phone = phone.trim();
+    if (location !== undefined) update.location = location.trim();
+
+    const user = await User.findByIdAndUpdate(req.user.id, update, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.json({ user: user.toJSON() });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, Package, Search, MessageCircle, Tag,
-  Users, ShoppingBag, TrendingUp, ChevronRight, Zap, Shield, Star,
+  ChevronRight, Zap,
   Smartphone, Laptop, Home as HomeIcon, Shirt, Gamepad2, BookOpen, Dumbbell, Baby
 } from 'lucide-react';
 import { categories } from '../api/api';
@@ -105,29 +105,6 @@ const styles = `
     text-align: center;
     max-width: 800px;
   }
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 22px;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-full);
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 36px;
-    backdrop-filter: blur(12px);
-    animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  .hero-badge-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-    box-shadow: 0 0 8px rgba(233, 69, 96, 0.5);
-  }
   .hero-title {
     font-size: clamp(42px, 7vw, 76px);
     font-weight: 800;
@@ -179,59 +156,6 @@ const styles = `
     background: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.22);
   }
-  .hero-stats-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 56px;
-    margin-top: 72px;
-    animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
-  }
-  .hero-stat { text-align: center; }
-  .hero-stat-value {
-    font-size: 32px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -0.5px;
-  }
-  .hero-stat-label {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.35);
-    margin-top: 6px;
-    font-weight: 500;
-  }
-  .hero-stat-divider {
-    width: 1px;
-    height: 44px;
-    background: rgba(255, 255, 255, 0.08);
-  }
-  .hero-floating-cards {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .hero-float-card {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: var(--radius-lg);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: rgba(255, 255, 255, 0.65);
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-  .hero-float-card svg { color: var(--accent); flex-shrink: 0; }
-  .hero-float-1 { top: 18%; left: 6%; animation: floatSlow 6s ease-in-out infinite; }
-  .hero-float-2 { top: 28%; right: 5%; animation: floatMedium 5s ease-in-out infinite 0.5s; }
-  .hero-float-3 { bottom: 22%; left: 8%; animation: floatFast 7s ease-in-out infinite 1s; }
-  .hero-float-4 { bottom: 16%; right: 8%; animation: floatSlow 8s ease-in-out infinite 1.5s; }
-
   .home-section { padding: 100px 24px; }
   .home-section-alt { background: var(--bg-secondary); }
   .home-section-inner {
@@ -423,68 +347,6 @@ const styles = `
     margin: 0 auto;
   }
 
-  .stats-banner {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary-lighter) 100%);
-    padding: 88px 24px;
-    position: relative;
-    overflow: hidden;
-  }
-  .stats-banner-grid-overlay {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
-  .stats-banner-inner {
-    position: relative;
-    z-index: 1;
-    max-width: var(--container);
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-  }
-  .stat-card {
-    text-align: center;
-    padding: 28px 24px;
-    border-radius: var(--radius-xl);
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(8px);
-    transition: all 0.3s ease;
-  }
-  .stat-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    transform: translateY(-2px);
-  }
-  .stat-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: var(--radius-lg);
-    background: rgba(233, 69, 96, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 18px;
-    color: var(--accent);
-  }
-  .stat-value {
-    font-size: 38px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: -1px;
-    line-height: 1.1;
-  }
-  .stat-label {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.4);
-    margin-top: 8px;
-    font-weight: 500;
-  }
-
   .cta-banner {
     padding: 110px 24px;
     text-align: center;
@@ -534,19 +396,12 @@ const styles = `
     .categories-grid { grid-template-columns: repeat(2, 1fr); }
     .steps-grid { grid-template-columns: 1fr; gap: 48px; }
     .steps-grid::before { display: none; }
-    .stats-banner-inner { grid-template-columns: repeat(2, 1fr); }
-    .hero-stats-row { gap: 32px; }
-    .hero-float-card { display: none; }
   }
   @media (max-width: 640px) {
     .home-hero { padding: 48px 20px; min-height: auto; }
-    .hero-stats-row { flex-direction: column; gap: 20px; }
-    .hero-stat-divider { width: 40px; height: 1px; }
     .categories-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .category-card { padding: 24px 16px; }
-    .stats-banner-inner { grid-template-columns: 1fr; }
     .home-section { padding: 64px 20px; }
-    .stat-card { padding: 24px 16px; }
   }
 `;
 
@@ -579,11 +434,13 @@ export default function Home() {
   const [cats, setCats] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const excluded = ['jobs', 'real estate', 'pets'];
+
   useEffect(() => {
     categories.list()
       .then((data) => {
         const arr = Array.isArray(data) ? data : data.categories || [];
-        setCats(arr);
+        setCats(arr.filter(c => !excluded.includes(c.name?.toLowerCase())));
       })
       .catch(() => setCats([]))
       .finally(() => setLoading(false));
@@ -599,30 +456,9 @@ export default function Home() {
           <div className="hero-orb hero-orb-2" />
           <div className="hero-orb hero-orb-3" />
 
-          <div className="hero-floating-cards">
-            <div className="hero-float-card hero-float-1">
-              <ShoppingBag size={16} />
-              <span>10,000+ Listings</span>
-            </div>
-            <div className="hero-float-card hero-float-2">
-              <Star size={16} />
-              <span>4.9 Rating</span>
-            </div>
-            <div className="hero-float-card hero-float-3">
-              <Shield size={16} />
-              <span>Secure Transactions</span>
-            </div>
-            <div className="hero-float-card hero-float-4">
-              <Zap size={16} />
-              <span>Instant Connect</span>
-            </div>
-          </div>
+
 
           <div className="hero-content">
-            <div className="hero-badge">
-              <span className="hero-badge-dot" />
-              Trusted by 5,000+ users across India
-            </div>
             <h1 className="hero-title">
               Buy & Sell on<br />
               <span className="hero-title-accent">Nexus</span>
@@ -642,22 +478,6 @@ export default function Home() {
                   Start Selling
                 </Button>
               </Link>
-            </div>
-            <div className="hero-stats-row">
-              <div className="hero-stat">
-                <div className="hero-stat-value">10K+</div>
-                <div className="hero-stat-label">Active Listings</div>
-              </div>
-              <div className="hero-stat-divider" />
-              <div className="hero-stat">
-                <div className="hero-stat-value">5K+</div>
-                <div className="hero-stat-label">Happy Users</div>
-              </div>
-              <div className="hero-stat-divider" />
-              <div className="hero-stat">
-                <div className="hero-stat-value">1K+</div>
-                <div className="hero-stat-label">Verified Sellers</div>
-              </div>
             </div>
           </div>
         </section>
@@ -774,40 +594,6 @@ export default function Home() {
                   Message sellers directly, negotiate, and complete your purchase with confidence and security.
                 </p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="stats-banner">
-          <div className="stats-banner-grid-overlay" />
-          <div className="stats-banner-inner">
-            <div className="stat-card">
-              <div className="stat-icon">
-                <ShoppingBag size={22} />
-              </div>
-              <div className="stat-value">10K+</div>
-              <div className="stat-label">Active Listings</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">
-                <Users size={22} />
-              </div>
-              <div className="stat-value">5K+</div>
-              <div className="stat-label">Registered Users</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">
-                <TrendingUp size={22} />
-              </div>
-              <div className="stat-value">1K+</div>
-              <div className="stat-label">Verified Sellers</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">
-                <Star size={22} />
-              </div>
-              <div className="stat-value">4.9</div>
-              <div className="stat-label">Average Rating</div>
             </div>
           </div>
         </section>

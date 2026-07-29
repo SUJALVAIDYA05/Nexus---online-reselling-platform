@@ -12,7 +12,7 @@ export default function Footer() {
               <div className="navbar-logo"><span className="logo-icon">N</span></div>
               <span className="logo-text">NEXUS</span>
             </Link>
-            <p className="footer-tagline">The modern marketplace for buying and selling pre-owned goods. Trusted by thousands.</p>
+            <p className="footer-tagline">The modern marketplace for buying and selling pre-owned goods.</p>
             <div className="footer-contact">
               <a href="mailto:hello@nexus.dev"><Mail size={14} /> hello@nexus.dev</a>
               <a href="tel:+919876543210"><Phone size={14} /> +91 98765 43210</a>

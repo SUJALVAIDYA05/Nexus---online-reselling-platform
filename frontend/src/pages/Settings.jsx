@@ -28,7 +28,7 @@ function Toggle({ enabled, onChange, label, description }) {
         <span
           style={{
             ...toggleStyles.thumb,
-            transform: enabled ? 'translateX(18px)' : 'translateX(2px)',
+            transform: enabled ? 'translateX(24px)' : 'translateX(2px)',
           }}
         />
       </button>
@@ -414,7 +414,7 @@ const toggleStyles = {
   },
   thumb: {
     width: 18, height: 18, borderRadius: '50%', background: '#fff',
-    position: 'absolute', top: 3,
+    position: 'absolute', top: 3, left: 0,
     transition: 'transform var(--transition)',
     boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
   },

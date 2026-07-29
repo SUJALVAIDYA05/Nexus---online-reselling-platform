@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, TrendingUp, Users, Shield, Quote } from 'lucide-react';
+import { ArrowRight, Star, Quote } from 'lucide-react';
 import Button from '../components/ui/Button';
 
 const testimonials = [
@@ -16,7 +16,7 @@ const testimonials = [
     role: 'Power Seller',
     initials: 'SK',
     stars: 5,
-    quote: 'I have sold over 200 items on NEXUS in the past year. The platform is intuitive, the payment system is reliable, and the support team is always helpful.',
+    quote: 'NEXUS has been my go-to platform for selling. The intuitive interface, reliable payments, and helpful support team make it a joy to use.',
     gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
   },
   {
@@ -53,13 +53,6 @@ const testimonials = [
   },
 ];
 
-const stats = [
-  { number: '4.8', label: 'Average Rating', icon: Star },
-  { number: '25K+', label: 'Happy Customers', icon: Users },
-  { number: '98%', label: 'Satisfaction Rate', icon: TrendingUp },
-  { number: '99.5%', label: 'Safe Transactions', icon: Shield },
-];
-
 function StarRating({ count }) {
   return (
     <div style={{ display: 'flex', gap: 2 }}>
@@ -86,8 +79,8 @@ export default function Testimonials() {
             <span>Testimonials</span>
           </div>
           <h1 style={styles.heroTitle}>
-            Loved by thousands<br />
-            <span style={styles.heroAccent}>across India</span>
+            What our users<br />
+            <span style={styles.heroAccent}>say about us</span>
           </h1>
           <p style={styles.heroSubtitle}>
             Don't take our word for it. Here's what our community has to say
@@ -116,23 +109,6 @@ export default function Testimonials() {
                     <p style={styles.role}>{t.role}</p>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section style={{ ...styles.section, background: 'var(--bg-secondary)' }}>
-        <div className="container" style={styles.container}>
-          <div style={styles.statsGrid}>
-            {stats.map((stat, i) => (
-              <div key={i} style={{ ...styles.statCard, animation: `slideUp 0.4s ease ${0.1 * i}s both` }}>
-                <div style={styles.statIcon}>
-                  <stat.icon size={24} color="var(--accent)" />
-                </div>
-                <span style={styles.statNumber}>{stat.number}</span>
-                <span style={styles.statLabel}>{stat.label}</span>
               </div>
             ))}
           </div>
@@ -215,20 +191,6 @@ const styles = {
   initials: { fontSize: 15, fontWeight: 700, color: '#fff' },
   name: { fontSize: 15, fontWeight: 600, color: 'var(--text)', margin: '0 0 2px' },
   role: { fontSize: 13, color: 'var(--text-tertiary)', margin: 0 },
-  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 },
-  statCard: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-    padding: '36px 20px', borderRadius: 'var(--radius-xl)',
-    background: 'var(--bg)', border: '1px solid var(--border)',
-    boxShadow: 'var(--shadow-card)',
-    transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-  },
-  statIcon: {
-    width: 52, height: 52, borderRadius: 'var(--radius-xl)',
-    background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  statNumber: { fontSize: 32, fontWeight: 900, color: 'var(--text)' },
-  statLabel: { fontSize: 14, color: 'var(--text-tertiary)', fontWeight: 500 },
   ctaSection: {
     padding: '96px 24px',
     background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%)',

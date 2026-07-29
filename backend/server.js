@@ -106,8 +106,14 @@ app.post('/api/auth/login', async (req, res, next) => {
 });
 
 // GET /api/auth/me — protected
-app.get('/api/auth/me', authMiddleware, (req, res) => {
-  res.json({ user: { id: req.user.id, name: req.user.name, email: req.user.email } });
+app.get('/api/auth/me', authMiddleware, async (req, res, next) => {
+  try {
+    const userDoc = await User.findById(req.user.id);
+    if (!userDoc) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: userDoc.toJSON() });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // POST /api/auth/logout

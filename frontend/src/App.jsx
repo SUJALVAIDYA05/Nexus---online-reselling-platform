@@ -12,6 +12,7 @@ import ListingDetail from './pages/ListingDetail';
 import Dashboard from './pages/Dashboard';
 import MyListings from './pages/MyListings';
 import CreateListing from './pages/CreateListing';
+import ListingSuccess from './pages/ListingSuccess';
 import EditListing from './pages/EditListing';
 import Favorites from './pages/Favorites';
 import Orders from './pages/Orders';
@@ -78,13 +79,14 @@ export default function App() {
               <Route path="orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
               <Route path="messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
               <Route path="create-listing" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
+              <Route path="listing-success" element={<ProtectedRoute><ListingSuccess /></ProtectedRoute>} />
               <Route path="edit-listing/:id" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
-            </Route>
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-              <Route index element={<Dashboard />} />
-              <Route path="my-listings" element={<MyListings />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="settings" element={<Settings />} />
+              <Route path="dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                <Route index element={<Dashboard />} />
+                <Route path="my-listings" element={<MyListings />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

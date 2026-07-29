@@ -55,7 +55,7 @@ export default function EditListing() {
         const cats = catRes.categories || catRes || [];
         setCategoryList(cats);
 
-        if (user && listing.seller?._id !== user._id && listing.seller !== user._id) {
+        if (user && listing.seller?._id !== user.id && listing.seller !== user.id) {
           setNotFound(true);
           return;
         }
@@ -170,7 +170,7 @@ export default function EditListing() {
         images: allImageUrls,
       });
 
-      navigate('/my-listings');
+      navigate('/dashboard/my-listings');
     } catch (err) {
       setErrors({ submit: err.message || 'Failed to update listing' });
       setUploading(false);

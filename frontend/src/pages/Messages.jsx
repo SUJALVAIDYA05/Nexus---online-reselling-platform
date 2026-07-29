@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { MessageSquare, ArrowLeft, Send, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { conversations as conversationsApi } from '../api/api';
@@ -430,9 +430,13 @@ const styles = `
 
 export default function Messages() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const convoIdParam = searchParams.get('convo');
+  const listingIdParam = searchParams.get('listing');
+
   const [convoList, setConvoList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeId, setActiveId] = useState(null);
+  const [activeId, setActiveId] = useState(convoIdParam || null);
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -447,21 +451,43 @@ export default function Messages() {
   const fetchConversations = useCallback(async () => {
     try {
       const data = await conversationsApi.list();
-      setConvoList(data.conversations || []);
+      const list = data.conversations || [];
+      setConvoList(list);
+
+      if (convoIdParam) {
+        setActiveId(convoIdParam);
+        setMobileShowThread(true);
+      } else if (listingIdParam) {
+        const existing = list.find((c) => (c.listing?._id || c.listing) === listingIdParam);
+        if (existing) {
+          setActiveId(existing._id);
+          setMobileShowThread(true);
+        } else {
+          try {
+            const newConvo = await conversationsApi.create(listingIdParam);
+            setConvoList((prev) => [newConvo, ...prev]);
+            setActiveId(newConvo._id);
+            setMobileShowThread(true);
+          } catch (err) {
+            console.error('Failed to create conversation for listing', err);
+          }
+        }
+      }
     } catch (err) {
       console.error('Failed to load conversations', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [convoIdParam, listingIdParam]);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
   const activeConvo = convoList.find((c) => c._id === activeId);
 
   const otherParticipant = (convo) => {
-    if (!convo.participants || !user) return null;
-    return convo.participants.find((p) => p._id !== user._id) || convo.participants[0];
+    if (!convo?.participants || !user) return null;
+    const currentUserId = user.id || user._id;
+    return convo.participants.find((p) => String(p._id || p.id || p) !== String(currentUserId)) || convo.participants[0];
   };
 
   const loadMessages = useCallback(async (convoId) => {
@@ -509,7 +535,7 @@ export default function Messages() {
 
     const optimisticMsg = {
       _id: `temp-${Date.now()}`,
-      sender: { _id: user._id, name: user.name, avatarUrl: user.avatarUrl },
+      sender: { _id: user.id, name: user.name, avatarUrl: user.avatarUrl },
       text,
       createdAt: new Date().toISOString(),
       readBy: [],
@@ -716,7 +742,9 @@ export default function Messages() {
                       );
                     }
                     const msg = item.data;
-                    const isSent = msg.sender?._id === user?._id;
+                    const senderId = msg.sender?._id || msg.sender?.id || msg.sender;
+                    const currentUserId = user?.id || user?._id;
+                    const isSent = String(senderId) === String(currentUserId);
                     return (
                       <div key={item.key} className={`msg-bubble-row ${isSent ? 'sent' : 'received'}`}>
                         <div className={`msg-bubble ${isSent ? 'sent' : 'received'}`}>
