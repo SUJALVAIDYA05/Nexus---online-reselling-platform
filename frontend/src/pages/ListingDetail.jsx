@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import {
   ChevronLeft, ChevronRight, Heart, ShoppingCart, MessageSquare,
   MapPin, Calendar, Tag, ChevronRight as BreadcrumbArrow,
@@ -13,7 +14,7 @@ import EmptyState from '../components/ui/EmptyState';
 import ListingCard from '../components/listing/ListingCard';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { listings, favorites } from '../api/api';
+import { listings, favorites, conversations } from '../api/api';
 
 const fmtPrice = (p) =>
   new Intl.NumberFormat('en-IN', {
@@ -131,6 +132,30 @@ export default function ListingDetail() {
     setCartAdded(true);
     setTimeout(() => setCartAdded(false), 2500);
   }, [user, addItem, listing, navigate]);
+
+  const [msgLoading, setMsgLoading] = useState(false);
+
+  const handleMessageSeller = useCallback(async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    const sellerId = listing?.seller?._id || listing?.seller;
+    const currentUserId = user?.id || user?._id;
+    if (sellerId === currentUserId) {
+      toast.error('You cannot message yourself');
+      return;
+    }
+    setMsgLoading(true);
+    try {
+      const convo = await conversations.create(listing._id);
+      navigate(`/messages?convo=${convo._id}`);
+    } catch (err) {
+      toast.error(err?.message || 'Failed to start conversation');
+    } finally {
+      setMsgLoading(false);
+    }
+  }, [user, listing, navigate]);
 
   const handleShare = useCallback(() => {
     if (navigator.share) {
@@ -277,9 +302,11 @@ export default function ListingDetail() {
                   fullWidth
                   size="lg"
                   icon={MessageSquare}
-                  onClick={() => navigate(`/chat?listing=${listing._id}`)}
+                  onClick={handleMessageSeller}
+                  loading={msgLoading}
+                  disabled={user && ((listing?.seller?._id || listing?.seller) === (user?.id || user?._id))}
                 >
-                  Message Seller
+                  {user && ((listing?.seller?._id || listing?.seller) === (user?.id || user?._id)) ? 'Your Listing' : 'Message Seller'}
                 </Button>
                 <div className="ld-secondary-actions">
                   <Button

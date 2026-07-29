@@ -8,13 +8,13 @@ export default function Sidebar() {
 
   const links = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/my-listings', icon: Package, label: 'My Listings' },
+    { to: '/dashboard/my-listings', icon: Package, label: 'My Listings' },
     { to: '/create-listing', icon: PlusCircle, label: 'Create Listing' },
     { to: '/favorites', icon: Heart, label: 'Wishlist' },
     { to: '/orders', icon: ShoppingCart, label: 'Orders' },
     { to: '/messages', icon: MessageCircle, label: 'Messages' },
-    { to: '/profile', icon: User, label: 'Profile' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
+    { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (

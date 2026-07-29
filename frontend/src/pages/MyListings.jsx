@@ -42,7 +42,7 @@ export default function MyListings() {
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        const data = await users.getListings(user._id);
+        const data = await users.getListings(user.id);
         setItems(Array.isArray(data) ? data : (data.listings || []));
       } catch {
         // silent

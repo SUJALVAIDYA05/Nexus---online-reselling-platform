@@ -23,7 +23,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const [myRes, favRes, recentRes] = await Promise.allSettled([
-          users.getListings(user._id),
+          users.getListings(user.id),
           favorites.list(),
           listings.list({ limit: 4, sort: '-createdAt' }),
         ]);
@@ -97,7 +97,7 @@ export default function Dashboard() {
         <div className="section-header">
           <h2 className="section-title">Your Recent Listings</h2>
           {myListings.length > 0 && (
-            <Link to="/my-listings" className="section-link">View all <ArrowUpRight size={14} /></Link>
+            <Link to="/dashboard/my-listings" className="section-link">View all <ArrowUpRight size={14} /></Link>
           )}
         </div>
         {loading ? (

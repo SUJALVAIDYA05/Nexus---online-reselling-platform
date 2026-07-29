@@ -238,7 +238,7 @@ router.put('/:id', authMiddleware, validateObjectId('id'), async (req, res, next
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /api/listings/:id — soft delete (protected, owner-only)
+// DELETE /api/listings/:id — permanently delete (protected, owner-only)
 // ---------------------------------------------------------------------------
 router.delete('/:id', authMiddleware, validateObjectId('id'), async (req, res, next) => {
   try {
@@ -249,13 +249,12 @@ router.delete('/:id', authMiddleware, validateObjectId('id'), async (req, res, n
       return res.status(403).json({ error: 'You can only delete your own listings' });
     }
 
-    listing.status = 'removed';
-    await listing.save();
-
     // Clean up images on Cloudinary (fire-and-forget)
     destroyImages(listing.images);
 
-    res.json({ message: 'Listing removed' });
+    await Listing.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Listing permanently deleted' });
   } catch (err) {
     next(err);
   }

@@ -38,6 +38,16 @@ export default function Navbar() {
           <NavLink to="/services" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
             Services
           </NavLink>
+          {user && (
+            <>
+              <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/dashboard/my-listings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+                My Listings
+              </NavLink>
+            </>
+          )}
         </div>
 
         <div className="navbar-actions">
@@ -72,10 +82,10 @@ export default function Navbar() {
                       <Link to="/dashboard" className="profile-item" onClick={() => setProfileOpen(false)}>
                         <LayoutDashboard size={16} /> Dashboard
                       </Link>
-                      <Link to="/my-listings" className="profile-item" onClick={() => setProfileOpen(false)}>
+                      <Link to="/dashboard/my-listings" className="profile-item" onClick={() => setProfileOpen(false)}>
                         <Package size={16} /> My Listings
                       </Link>
-                      <Link to="/profile" className="profile-item" onClick={() => setProfileOpen(false)}>
+                      <Link to="/dashboard/profile" className="profile-item" onClick={() => setProfileOpen(false)}>
                         <User size={16} /> Profile
                       </Link>
                       <Link to="/orders" className="profile-item" onClick={() => setProfileOpen(false)}>

@@ -138,7 +138,7 @@ export default function CreateListing() {
         images: allImageUrls,
       });
 
-      navigate('/my-listings');
+      navigate('/listing-success', { state: { title: form.title.trim() } });
     } catch (err) {
       setErrors({ submit: err.message || 'Failed to create listing' });
       setUploading(false);

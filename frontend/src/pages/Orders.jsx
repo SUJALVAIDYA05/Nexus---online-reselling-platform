@@ -40,7 +40,7 @@ export default function Orders() {
     const fetchOrders = async () => {
       try {
         const [salesRes, favRes] = await Promise.allSettled([
-          users.getListings(user._id),
+          users.getListings(user.id),
           favorites.list(),
         ]);
         const salesData = salesRes.status === 'fulfilled' ? salesRes.value : [];
