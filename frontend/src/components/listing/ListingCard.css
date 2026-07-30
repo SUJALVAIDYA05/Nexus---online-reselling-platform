@@ -1,16 +1,19 @@
 .listing-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  transition: all var(--transition-slow);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .listing-card:hover {
+  border-color: rgba(244, 63, 94, 0.35);
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-4px);
-  border-color: var(--border);
 }
 
 .listing-card-image {
@@ -29,7 +32,7 @@
 }
 
 .listing-card:hover .listing-card-image img {
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
 .listing-card-placeholder {
@@ -48,39 +51,43 @@
   top: 12px;
   left: 12px;
   text-transform: capitalize;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .listing-card-fav {
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-tertiary);
   transition: all var(--transition);
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .listing-card-fav:hover,
 .listing-card-fav.favorited {
   color: var(--accent);
-  background: white;
-  box-shadow: var(--shadow-md);
-  transform: scale(1.1);
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.4);
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
 }
 
 .listing-card-body {
-  padding: 18px 20px 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .listing-card-title-link {
@@ -90,7 +97,7 @@
 .listing-card-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text);
+  color: #ffffff;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -98,13 +105,18 @@
   overflow: hidden;
   margin-bottom: 10px;
   letter-spacing: -0.01em;
+  transition: color var(--transition);
+}
+
+.listing-card-title:hover {
+  color: var(--accent);
 }
 
 .listing-card-price {
   font-size: 20px;
   font-weight: 800;
   color: var(--accent);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   letter-spacing: -0.02em;
 }
 
@@ -113,6 +125,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
 }
 
 .listing-card-location {
@@ -127,7 +142,8 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
-  background: var(--bg-tertiary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-light);
   padding: 4px 10px;
   border-radius: var(--radius-full);
   letter-spacing: 0.01em;

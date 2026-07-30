@@ -1,16 +1,40 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Package, Heart, MessageCircle, TrendingUp,
   PlusCircle, Search, ShoppingBag, ArrowUpRight, Calendar
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { listings, favorites, users } from '../api/api';
-import { Card, CardBody } from '../components/ui/Card';
-import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import ListingCard from '../components/listing/ListingCard';
-import { SkeletonLine } from '../components/ui/Spinner';
+import PageTransition from '../components/ui/PageTransition';
+
+const styles = `
+  .db-page { padding: 32px 0 60px; }
+  .db-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+  .db-welcome { font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
+  .db-date { color: var(--text-tertiary); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+
+  .db-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+  .stat-card { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; display: flex; align-items: center; gap: 16px; }
+  .stat-icon { width: 48px; height: 48px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .stat-val { font-size: 26px; font-weight: 900; color: #ffffff; line-height: 1.1; }
+  .stat-label { font-size: 13px; color: var(--text-secondary); }
+
+  .db-section { margin-bottom: 40px; }
+  .db-sec-title { font-size: 20px; font-weight: 800; color: #ffffff; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+
+  .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .quick-card { background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; display: flex; align-items: center; gap: 16px; text-decoration: none; color: #ffffff; transition: all 0.2s; }
+  .quick-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+
+  @media (max-width: 992px) {
+    .db-stats { grid-template-columns: repeat(2, 1fr); }
+    .quick-grid { grid-template-columns: 1fr; }
+  }
+`;
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -23,23 +47,14 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const [myRes, favRes, recentRes] = await Promise.allSettled([
-          users.getListings(user.id),
+          users.getListings(user.id || user._id),
           favorites.list(),
           listings.list({ limit: 4, sort: '-createdAt' }),
         ]);
         const myData = myRes.status === 'fulfilled' ? myRes.value : [];
-        const myListingsArr = Array.isArray(myData) ? myData : (myData.listings || []);
-        setMyListings(myListingsArr);
-        setFavItems(
-          favRes.status === 'fulfilled'
-            ? (Array.isArray(favRes.value) ? favRes.value : (favRes.value.favorites || []))
-            : []
-        );
-        setRecentListings(
-          recentRes.status === 'fulfilled'
-            ? (recentRes.value.listings || [])
-            : []
-        );
+        setMyListings(Array.isArray(myData) ? myData : (myData.listings || []));
+        setFavItems(favRes.status === 'fulfilled' ? (Array.isArray(favRes.value) ? favRes.value : (favRes.value.favorites || [])) : []);
+        setRecentListings(recentRes.status === 'fulfilled' ? (recentRes.value.listings || []) : []);
       } catch {
         // silent
       } finally {
@@ -55,208 +70,92 @@ export default function Dashboard() {
   });
 
   const stats = [
-    { label: 'My Listings', value: myListings.length, icon: Package, color: '#6366f1', bg: 'rgba(99,102,241,0.08)' },
-    { label: 'Active Listings', value: activeListings.length, icon: TrendingUp, color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-    { label: 'Wishlist', value: favItems.length, icon: Heart, color: '#e94560', bg: 'rgba(233,69,96,0.08)' },
-    { label: 'Messages', value: 0, icon: MessageCircle, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+    { label: 'My Listings', value: myListings.length, icon: Package, color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
+    { label: 'Active Deals', value: activeListings.length, icon: TrendingUp, color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+    { label: 'Wishlist Items', value: favItems.length, icon: Heart, color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
+    { label: 'Chat Inquiries', value: 0, icon: MessageCircle, color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
   ];
 
   return (
-    <div className="dashboard-page">
-      <header className="dashboard-header">
-        <div>
-          <h1 className="dashboard-welcome">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
-          <p className="dashboard-date"><Calendar size={14} /> {today}</p>
-        </div>
-        <Link to="/create-listing">
-          <Button icon={PlusCircle}>New Listing</Button>
-        </Link>
-      </header>
+    <PageTransition>
+      <style>{styles}</style>
+      <div className="db-page">
+        <header className="db-header">
+          <div>
+            <h1 className="db-welcome">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
+            <div className="db-date"><Calendar size={14} /> {today}</div>
+          </div>
+          <Link to="/create-listing">
+            <Button icon={PlusCircle}>New Listing</Button>
+          </Link>
+        </header>
 
-      <section className="dashboard-stats">
-        {stats.map(s => (
-          <Card key={s.label} hover className="stat-card">
-            <CardBody>
+        <div className="db-stats">
+          {stats.map(s => (
+            <motion.div 
+              key={s.label}
+              className="stat-card"
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
               <div className="stat-icon" style={{ background: s.bg, color: s.color }}>
                 <s.icon size={22} />
               </div>
-              <div className="stat-info">
-                {loading ? (
-                  <SkeletonLine width={40} height={28} />
-                ) : (
-                  <span className="stat-value">{s.value}</span>
-                )}
-                <span className="stat-label">{s.label}</span>
+              <div>
+                <div className="stat-val">{s.value}</div>
+                <div className="stat-label">{s.label}</div>
               </div>
-            </CardBody>
-          </Card>
-        ))}
-      </section>
-
-      <section className="dashboard-section">
-        <div className="section-header">
-          <h2 className="section-title">Your Recent Listings</h2>
-          {myListings.length > 0 && (
-            <Link to="/dashboard/my-listings" className="section-link">View all <ArrowUpRight size={14} /></Link>
-          )}
+            </motion.div>
+          ))}
         </div>
-        {loading ? (
-          <div className="listings-grid">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="card" style={{ overflow: 'hidden' }}>
-                <div className="skeleton" style={{ height: 180 }} />
-                <div style={{ padding: 16 }}>
-                  <SkeletonLine width="80%" height={16} />
-                  <SkeletonLine width="50%" height={14} />
-                  <SkeletonLine width="35%" height={22} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : recentListings.length === 0 ? (
-          <div className="dashboard-empty">
-            <Package size={40} strokeWidth={1.5} />
-            <h3>No listings yet</h3>
-            <p>Create your first listing and start selling!</p>
-            <Link to="/create-listing">
-              <Button icon={PlusCircle}>Create Listing</Button>
+
+        <div className="db-section">
+          <div className="db-sec-title">
+            <span>Recent Platform Listings</span>
+            <Link to="/browse" style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              Browse all <ArrowUpRight size={14} />
             </Link>
           </div>
-        ) : (
-          <div className="listings-grid">
-            {recentListings.map(listing => (
-              <ListingCard key={listing._id} listing={listing} />
-            ))}
-          </div>
-        )}
-      </section>
 
-      <section className="dashboard-section">
-        <h2 className="section-title">Quick Actions</h2>
-        <div className="quick-actions">
-          <Link to="/create-listing" className="quick-action-card">
-            <div className="quick-action-icon" style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}>
-              <PlusCircle size={24} />
+          {loading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+              {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 280 }} />)}
             </div>
-            <div>
-              <h4>Create Listing</h4>
-              <p>List a new item for sale</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+              {recentListings.map(item => (
+                <ListingCard key={item._id} listing={item} />
+              ))}
             </div>
-          </Link>
-          <Link to="/browse" className="quick-action-card">
-            <div className="quick-action-icon" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
-              <Search size={24} />
-            </div>
-            <div>
-              <h4>Browse Items</h4>
-              <p>Discover great deals</p>
-            </div>
-          </Link>
-          <Link to="/messages" className="quick-action-card">
-            <div className="quick-action-icon" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
-              <MessageCircle size={24} />
-            </div>
-            <div>
-              <h4>Messages</h4>
-              <p>Check your inbox</p>
-            </div>
-          </Link>
-          <Link to="/favorites" className="quick-action-card">
-            <div className="quick-action-icon" style={{ background: 'rgba(233,69,96,0.1)', color: '#e94560' }}>
-              <ShoppingBag size={24} />
-            </div>
-            <div>
-              <h4>Wishlist</h4>
-              <p>View saved items</p>
-            </div>
-          </Link>
+          )}
         </div>
-      </section>
 
-      <style>{`
-        .dashboard-page { max-width: 100%; }
-        .dashboard-header {
-          display: flex; align-items: flex-start; justify-content: space-between;
-          margin-bottom: 36px; gap: 16px; flex-wrap: wrap;
-        }
-        .dashboard-welcome {
-          font-size: 28px; font-weight: 800; color: var(--text);
-          margin: 0 0 6px; letter-spacing: -0.6px; line-height: 1.25;
-        }
-        .dashboard-date {
-          font-size: 13px; color: var(--text-tertiary);
-          display: flex; align-items: center; gap: 6px; margin: 0;
-        }
-        .dashboard-stats {
-          display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 18px; margin-bottom: 44px;
-        }
-        .stat-card .card-body {
-          padding: 22px 24px; display: flex; align-items: center; gap: 18px;
-          transition: all var(--transition-slow);
-        }
-        .stat-icon {
-          width: 52px; height: 52px; border-radius: var(--radius-xl);
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-          transition: transform var(--transition-slow);
-        }
-        .stat-card:hover .stat-icon { transform: scale(1.08); }
-        .stat-info { display: flex; flex-direction: column; gap: 2px; }
-        .stat-value { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1.2; letter-spacing: -0.3px; }
-        .stat-label { font-size: 13px; color: var(--text-tertiary); font-weight: 500; }
-        .dashboard-section { margin-bottom: 44px; }
-        .section-header {
-          display: flex; align-items: center; justify-content: space-between;
-          margin-bottom: 22px;
-        }
-        .section-title { font-size: 18px; font-weight: 700; color: var(--text); margin: 0; letter-spacing: -0.3px; }
-        .section-link {
-          font-size: 13px; font-weight: 600; color: var(--accent);
-          text-decoration: none; display: flex; align-items: center; gap: 4px;
-          transition: all var(--transition-fast); padding: 4px 8px;
-          border-radius: var(--radius-sm); margin: -4px -8px;
-        }
-        .section-link:hover { background: var(--accent-light); }
-        .listings-grid {
-          display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
-          gap: 18px;
-        }
-        .dashboard-empty {
-          text-align: center; padding: 56px 32px;
-          background: var(--bg-secondary); border: 1px solid var(--border-light);
-          border-radius: var(--radius-2xl); color: var(--text-tertiary);
-          box-shadow: var(--shadow-card);
-        }
-        .dashboard-empty h3 { font-size: 17px; font-weight: 700; color: var(--text); margin: 14px 0 6px; }
-        .dashboard-empty p { font-size: 14px; margin-bottom: 22px; line-height: 1.6; }
-        .quick-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-        .quick-action-card {
-          display: flex; align-items: center; gap: 16px;
-          padding: 20px 22px; background: var(--bg-secondary);
-          border: 1px solid var(--border-light); border-radius: var(--radius-xl);
-          text-decoration: none; transition: all var(--transition-slow); cursor: pointer;
-          box-shadow: var(--shadow-card);
-        }
-        .quick-action-card:hover {
-          border-color: var(--border); box-shadow: var(--shadow-card-hover);
-          transform: translateY(-3px);
-        }
-        .quick-action-icon {
-          width: 48px; height: 48px; border-radius: var(--radius-xl);
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-          transition: transform var(--transition-slow);
-        }
-        .quick-action-card:hover .quick-action-icon { transform: scale(1.08); }
-        .quick-action-card h4 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 3px; }
-        .quick-action-card p { font-size: 12px; color: var(--text-tertiary); margin: 0; }
-        @media (max-width: 900px) { .dashboard-stats { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) {
-          .dashboard-stats { grid-template-columns: 1fr; }
-          .dashboard-welcome { font-size: 24px; }
-          .listings-grid { grid-template-columns: repeat(2, 1fr); }
-          .quick-actions { grid-template-columns: 1fr; }
-        }
-      `}</style>
-    </div>
+        <div className="db-section">
+          <div className="db-sec-title">Quick Actions</div>
+          <div className="quick-grid">
+            <Link to="/create-listing" className="quick-card">
+              <PlusCircle size={28} color="var(--accent)" />
+              <div>
+                <div style={{ fontWeight: 700 }}>Post New Item</div>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Sell unused items fast</div>
+              </div>
+            </Link>
+            <Link to="/browse" className="quick-card">
+              <Search size={28} color="#10b981" />
+              <div>
+                <div style={{ fontWeight: 700 }}>Explore Marketplace</div>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Search products & filter</div>
+              </div>
+            </Link>
+            <Link to="/orders" className="quick-card">
+              <ShoppingBag size={28} color="#6366f1" />
+              <div>
+                <div style={{ fontWeight: 700 }}>My Orders & Purchases</div>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Track deliveries & status</div>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </PageTransition>
   );
 }
