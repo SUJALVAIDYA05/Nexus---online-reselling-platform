@@ -1,41 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   ArrowRight, Package, Search, MessageCircle, Tag,
-  ChevronRight, Zap,
+  ChevronRight, Zap, ShieldCheck, Sparkles, Star, TrendingUp,
   Smartphone, Laptop, Home as HomeIcon, Shirt, Gamepad2, BookOpen, Dumbbell, Baby
 } from 'lucide-react';
-import { categories } from '../api/api';
+import { categories, listings } from '../api/api';
 import Button from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { PageLoader } from '../components/ui/Spinner';
+import ListingCard from '../components/listing/ListingCard';
+import PageTransition from '../components/ui/PageTransition';
 
 const styles = `
-  @keyframes heroFadeUp {
-    from { opacity: 0; transform: translateY(32px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes floatSlow {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-12px); }
-  }
-  @keyframes floatMedium {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-  }
-  @keyframes floatFast {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-16px); }
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes gridPulse {
-    0%, 100% { opacity: 0.03; }
-    50% { opacity: 0.06; }
-  }
   @keyframes orbFloat1 {
     0%, 100% { transform: translate(0, 0) scale(1); }
     33% { transform: translate(30px, -30px) scale(1.05); }
@@ -47,88 +23,87 @@ const styles = `
     66% { transform: translate(20px, -30px) scale(1.05); }
   }
 
-  .home-page { overflow: hidden; }
-
   .home-hero {
     position: relative;
-    min-height: calc(100vh - var(--nav-height));
+    min-height: calc(88vh - var(--nav-height));
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 40%, var(--primary-lighter) 100%);
+    background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 70%, #0b0f19 100%);
     overflow: hidden;
-    padding: 80px 24px;
+    padding: 90px 24px;
   }
   .hero-grid-overlay {
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-    background-size: 64px 64px;
-    animation: gridPulse 8s ease-in-out infinite;
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
     pointer-events: none;
   }
   .hero-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(100px);
+    filter: blur(110px);
     pointer-events: none;
   }
   .hero-orb-1 {
     width: 600px;
     height: 600px;
-    background: rgba(233, 69, 96, 0.12);
+    background: rgba(244, 63, 94, 0.18);
     top: -200px;
     right: -150px;
     animation: orbFloat1 14s ease-in-out infinite;
   }
   .hero-orb-2 {
-    width: 500px;
-    height: 500px;
-    background: rgba(15, 52, 96, 0.25);
+    width: 550px;
+    height: 550px;
+    background: rgba(99, 102, 241, 0.22);
     bottom: -150px;
     left: -150px;
     animation: orbFloat2 16s ease-in-out infinite;
-  }
-  .hero-orb-3 {
-    width: 250px;
-    height: 250px;
-    background: rgba(233, 69, 96, 0.08);
-    top: 50%;
-    left: 50%;
-    animation: orbFloat1 10s ease-in-out infinite reverse;
   }
   .hero-content {
     position: relative;
     z-index: 2;
     text-align: center;
-    max-width: 800px;
+    max-width: 840px;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: var(--radius-full);
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    backdrop-filter: blur(8px);
   }
   .hero-title {
-    font-size: clamp(42px, 7vw, 76px);
-    font-weight: 800;
+    font-size: clamp(44px, 7.5vw, 76px);
+    font-weight: 900;
     line-height: 1.05;
     letter-spacing: -3px;
     color: #ffffff;
     margin-bottom: 28px;
-    animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
   }
   .hero-title-accent {
-    background: linear-gradient(135deg, var(--accent) 0%, #ff6b81 50%, #ff9a76 100%);
-    background-size: 200% 200%;
+    background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: gradientShift 4s ease-in-out infinite;
   }
   .hero-subtitle {
     font-size: clamp(16px, 2.2vw, 20px);
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-secondary);
     line-height: 1.75;
-    max-width: 560px;
+    max-width: 620px;
     margin: 0 auto 44px;
-    animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
   }
   .hero-actions {
     display: flex;
@@ -136,27 +111,8 @@ const styles = `
     justify-content: center;
     gap: 16px;
     flex-wrap: wrap;
-    animation: heroFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
   }
-  .hero-actions .btn-primary {
-    background: linear-gradient(135deg, var(--accent) 0%, #ff6b81 100%);
-    box-shadow: 0 4px 24px rgba(233, 69, 96, 0.4);
-  }
-  .hero-actions .btn-primary:hover {
-    box-shadow: 0 8px 36px rgba(233, 69, 96, 0.55);
-    transform: translateY(-2px);
-  }
-  .hero-actions .btn-secondary {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-    backdrop-filter: blur(8px);
-  }
-  .hero-actions .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.22);
-  }
-  .home-section { padding: 100px 24px; }
+  .home-section { padding: 90px 24px; position: relative; }
   .home-section-alt { background: var(--bg-secondary); }
   .home-section-inner {
     max-width: var(--container);
@@ -174,21 +130,21 @@ const styles = `
     font-weight: 700;
     color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 1.8px;
-    margin-bottom: 18px;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
   }
   .section-title {
-    font-size: clamp(28px, 4vw, 42px);
+    font-size: clamp(30px, 4.5vw, 44px);
     font-weight: 800;
     letter-spacing: -1.5px;
-    color: var(--text);
+    color: #ffffff;
     line-height: 1.15;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
   }
   .section-desc {
     font-size: 17px;
     color: var(--text-secondary);
-    max-width: 520px;
+    max-width: 560px;
     margin: 0 auto;
     line-height: 1.75;
   }
@@ -199,209 +155,122 @@ const styles = `
     gap: 20px;
   }
   .category-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-light);
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     padding: 32px 24px;
     text-align: center;
     text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    box-shadow: var(--shadow-card);
-  }
-  .category-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--accent-light) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity var(--transition);
   }
   .category-card:hover {
     border-color: var(--accent);
-    box-shadow: var(--shadow-card-hover), 0 0 0 1px var(--accent-light);
-    transform: translateY(-5px);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), 0 0 25px rgba(244, 63, 94, 0.25);
+    transform: translateY(-6px);
   }
-  .category-card:hover::before { opacity: 1; }
   .category-card-icon {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     border-radius: var(--radius-lg);
-    background: var(--accent-light);
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 18px;
     color: var(--accent);
-    position: relative;
-    z-index: 1;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
   }
   .category-card:hover .category-card-icon {
-    background: var(--accent);
-    color: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 4px 16px rgba(233, 69, 96, 0.3);
+    background: var(--gradient-primary);
+    color: #ffffff;
+    transform: scale(1.1) rotate(4deg);
+    box-shadow: 0 6px 20px rgba(244, 63, 94, 0.45);
   }
   .category-card-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
-    position: relative;
-    z-index: 1;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
     letter-spacing: -0.01em;
   }
-  .category-card-count {
-    font-size: 12px;
-    color: var(--text-tertiary);
-    margin-top: 4px;
-    position: relative;
-    z-index: 1;
+
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
   }
-  .categories-more { text-align: center; margin-top: 44px; }
 
   .steps-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
+    gap: 36px;
     position: relative;
   }
-  .steps-grid::before {
-    content: '';
-    position: absolute;
-    top: 56px;
-    left: calc(16.67% + 20px);
-    right: calc(16.67% + 20px);
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--border), var(--accent), var(--border), transparent);
+  .step-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-2xl);
+    padding: 40px 28px;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
   }
-  .step-card { text-align: center; position: relative; }
-  .step-number-wrap {
-    width: 116px;
-    height: 116px;
-    border-radius: 50%;
-    margin: 0 auto 32px;
+  .step-card:hover {
+    border-color: rgba(244, 63, 94, 0.35);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+  .step-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: var(--gradient-primary);
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-  }
-  .step-number-bg {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
-    border: 2px solid var(--border-light);
-  }
-  .step-number-inner {
-    position: relative;
-    z-index: 1;
-    width: 92px;
-    height: 92px;
-    border-radius: 50%;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent);
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .step-card:hover .step-number-inner {
-    border-color: var(--accent);
-    background: var(--accent-light);
-    transform: scale(1.08);
-    box-shadow: 0 0 30px rgba(233, 69, 96, 0.15);
-  }
-  .step-number {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-    box-shadow: 0 2px 8px rgba(233, 69, 96, 0.3);
+    margin: 0 auto 24px;
+    box-shadow: 0 8px 24px rgba(244, 63, 94, 0.35);
   }
   .step-title {
     font-size: 20px;
-    font-weight: 700;
-    color: var(--text);
+    font-weight: 800;
+    color: #ffffff;
     margin-bottom: 12px;
-    letter-spacing: -0.3px;
   }
   .step-desc {
     font-size: 15px;
     color: var(--text-secondary);
     line-height: 1.7;
-    max-width: 280px;
-    margin: 0 auto;
   }
 
   .cta-banner {
-    padding: 110px 24px;
+    padding: 100px 24px;
     text-align: center;
-    background: var(--bg);
+    background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
     position: relative;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
   .cta-banner-inner {
-    max-width: 640px;
+    max-width: 680px;
     margin: 0 auto;
     position: relative;
     z-index: 1;
   }
-  .cta-title {
-    font-size: clamp(30px, 4vw, 44px);
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    color: var(--text);
-    margin-bottom: 18px;
-    line-height: 1.12;
-  }
-  .cta-desc {
-    font-size: 17px;
-    color: var(--text-secondary);
-    margin-bottom: 40px;
-    line-height: 1.75;
-  }
-  .cta-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .cta-glow {
-    position: absolute;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(233, 69, 96, 0.05) 0%, transparent 70%);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
 
   @media (max-width: 1024px) {
-    .categories-grid { grid-template-columns: repeat(2, 1fr); }
-    .steps-grid { grid-template-columns: 1fr; gap: 48px; }
-    .steps-grid::before { display: none; }
+    .categories-grid, .listings-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-grid { grid-template-columns: 1fr; gap: 24px; }
   }
   @media (max-width: 640px) {
-    .home-hero { padding: 48px 20px; min-height: auto; }
-    .categories-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .category-card { padding: 24px 16px; }
-    .home-section { padding: 64px 20px; }
+    .categories-grid, .listings-grid { grid-template-columns: 1fr; }
+    .home-hero { padding: 60px 16px; }
   }
 `;
 
@@ -432,45 +301,56 @@ function getCategoryIcon(name) {
 
 export default function Home() {
   const [cats, setCats] = useState([]);
+  const [featuredListings, setFeaturedListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const excluded = ['jobs', 'real estate', 'pets'];
 
   useEffect(() => {
-    categories.list()
-      .then((data) => {
-        const arr = Array.isArray(data) ? data : data.categories || [];
-        setCats(arr.filter(c => !excluded.includes(c.name?.toLowerCase())));
-      })
-      .catch(() => setCats([]))
-      .finally(() => setLoading(false));
+    Promise.all([
+      categories.list().catch(() => []),
+      listings.list({ limit: 4 }).catch(() => ({ listings: [] }))
+    ]).then(([catData, listingData]) => {
+      const arr = Array.isArray(catData) ? catData : catData?.categories || [];
+      setCats(arr.filter(c => !excluded.includes(c.name?.toLowerCase())));
+      const listArr = Array.isArray(listingData) ? listingData : listingData?.listings || [];
+      setFeaturedListings(listArr);
+    }).finally(() => setLoading(false));
   }, []);
 
   return (
-    <>
+    <PageTransition>
       <style>{styles}</style>
       <div className="home-page">
         <section className="home-hero">
           <div className="hero-grid-overlay" />
           <div className="hero-orb hero-orb-1" />
           <div className="hero-orb hero-orb-2" />
-          <div className="hero-orb hero-orb-3" />
 
+          <motion.div 
+            className="hero-content"
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="hero-badge">
+              <Sparkles size={15} /> Pre-Owned Market Reimagined
+            </div>
 
-
-          <div className="hero-content">
             <h1 className="hero-title">
-              Buy & Sell on<br />
-              <span className="hero-title-accent">Nexus</span>
+              Buy & Sell Smart on<br />
+              <span className="hero-title-accent">Nexus Platform</span>
             </h1>
+
             <p className="hero-subtitle">
-              The modern marketplace for buying and selling pre-owned goods.
-              Discover incredible deals or turn your unused items into cash.
+              The premier online reselling destination. Discover verified deals, 
+              trade pre-loved goods, or turn your extra items into instant income today.
             </p>
+
             <div className="hero-actions">
               <Link to="/browse">
                 <Button size="lg" icon={Search}>
-                  Browse Listings
+                  Explore Browse
                 </Button>
               </Link>
               <Link to="/register">
@@ -479,56 +359,68 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         <section className="home-section home-section-alt">
           <div className="home-section-inner">
             <div className="section-header">
               <div className="section-label">
-                <Tag size={14} />
-                Categories
+                <Tag size={14} /> Top Categories
               </div>
               <h2 className="section-title">Explore What You Need</h2>
               <p className="section-desc">
-                Find exactly what you're looking for across our curated categories
+                Find incredible pre-owned treasures across our curated categories
               </p>
             </div>
 
             {loading ? (
               <div className="categories-grid">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="category-card" style={{ opacity: 0.5 }}>
-                    <div className="category-card-icon" style={{ background: 'var(--bg-tertiary)' }}>
-                      <div className="skeleton" style={{ width: 24, height: 24, borderRadius: 6 }} />
-                    </div>
-                    <div className="skeleton" style={{ width: '60%', height: 16, margin: '0 auto 4px' }} />
-                    <div className="skeleton" style={{ width: '40%', height: 12, margin: '0 auto' }} />
-                  </div>
+                  <div key={i} className="category-card skeleton" style={{ height: 160 }} />
                 ))}
               </div>
             ) : (
-              <div className="categories-grid">
+              <motion.div 
+                className="categories-grid"
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-50px' }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.08 }
+                  }
+                }}
+              >
                 {cats.slice(0, 8).map((cat) => {
                   const IconComp = getCategoryIcon(cat.name);
                   return (
-                    <Link
+                    <motion.div
                       key={cat._id}
-                      to={`/browse?category=${cat.slug || cat._id}`}
-                      className="category-card"
+                      variants={{
+                        hidden: { opacity: 0, y: 20 },
+                        show: { opacity: 1, y: 0 }
+                      }}
                     >
-                      <div className="category-card-icon">
-                        <IconComp size={24} />
-                      </div>
-                      <div className="category-card-name">{cat.name}</div>
-                    </Link>
+                      <Link
+                        to={`/browse?category=${cat.slug || cat._id}`}
+                        className="category-card"
+                      >
+                        <div className="category-card-icon">
+                          <IconComp size={26} />
+                        </div>
+                        <div className="category-card-name">{cat.name}</div>
+                      </Link>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
             )}
 
             {!loading && cats.length > 8 && (
-              <div className="categories-more">
+              <div style={{ textAlign: 'center', marginTop: 44 }}>
                 <Link to="/browse">
                   <Button variant="ghost" iconRight={ChevronRight}>
                     View All Categories
@@ -539,59 +431,68 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="home-section">
+        {featuredListings.length > 0 && (
+          <section className="home-section">
+            <div className="home-section-inner">
+              <div className="section-header">
+                <div className="section-label">
+                  <TrendingUp size={14} /> Fresh Arrivals
+                </div>
+                <h2 className="section-title">Featured Marketplace Goods</h2>
+                <p className="section-desc">
+                  Hand-picked pre-owned items listed recently by top verified sellers
+                </p>
+              </div>
+
+              <div className="listings-grid">
+                {featuredListings.map((listing) => (
+                  <ListingCard key={listing._id} listing={listing} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="home-section home-section-alt">
           <div className="home-section-inner">
             <div className="section-header">
               <div className="section-label">
-                <Zap size={14} />
-                How It Works
+                <ShieldCheck size={14} /> Seamless Process
               </div>
-              <h2 className="section-title">Three Steps to Start</h2>
+              <h2 className="section-title">Three Steps to Reselling Success</h2>
               <p className="section-desc">
-                Getting started on Nexus is simple. List, browse, and connect in minutes.
+                Getting started on Nexus is simple, secure, and lightning fast.
               </p>
             </div>
 
             <div className="steps-grid">
               <div className="step-card">
-                <div className="step-number-wrap">
-                  <div className="step-number-bg" />
-                  <div className="step-number-inner">
-                    <Package size={32} />
-                  </div>
-                  <div className="step-number">1</div>
+                <div className="step-icon-wrap">
+                  <Package size={30} />
                 </div>
-                <h3 className="step-title">List Your Item</h3>
+                <h3 className="step-title">1. Post Your Items</h3>
                 <p className="step-desc">
-                  Snap a photo, set your price, and publish your listing in under a minute. It's that simple.
+                  Snap photos, set your price, and publish your listing in under a minute with smart guidance.
                 </p>
               </div>
 
               <div className="step-card">
-                <div className="step-number-wrap">
-                  <div className="step-number-bg" />
-                  <div className="step-number-inner">
-                    <Search size={32} />
-                  </div>
-                  <div className="step-number">2</div>
+                <div className="step-icon-wrap">
+                  <Search size={30} />
                 </div>
-                <h3 className="step-title">Browse & Discover</h3>
+                <h3 className="step-title">2. Discover Verified Deals</h3>
                 <p className="step-desc">
-                  Explore thousands of listings from verified sellers near you. Filter by category, price, and condition.
+                  Explore pre-loved tech, fashion, and home goods with price transparency and instant search.
                 </p>
               </div>
 
               <div className="step-card">
-                <div className="step-number-wrap">
-                  <div className="step-number-bg" />
-                  <div className="step-number-inner">
-                    <MessageCircle size={32} />
-                  </div>
-                  <div className="step-number">3</div>
+                <div className="step-icon-wrap">
+                  <MessageCircle size={30} />
                 </div>
-                <h3 className="step-title">Connect & Transact</h3>
+                <h3 className="step-title">3. Direct Chat & Deal</h3>
                 <p className="step-desc">
-                  Message sellers directly, negotiate, and complete your purchase with confidence and security.
+                  Chat directly with buyers or sellers, arrange safe delivery, and complete your purchase securely.
                 </p>
               </div>
             </div>
@@ -599,28 +500,26 @@ export default function Home() {
         </section>
 
         <section className="cta-banner">
-          <div className="cta-glow" />
           <div className="cta-banner-inner">
-            <h2 className="cta-title">Ready to Start Selling?</h2>
-            <p className="cta-desc">
-              Join thousands of users who are already buying and selling on Nexus.
-              Turn your unused items into cash today.
+            <h2 className="section-title" style={{ marginBottom: 18 }}>Turn Extra Items Into Instant Cash</h2>
+            <p className="section-desc" style={{ marginBottom: 36 }}>
+              Join thousands of happy users buying and selling pre-owned items every day on Nexus.
             </p>
-            <div className="cta-actions">
+            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to="/register">
                 <Button size="lg" icon={Zap}>
-                  Get Started Free
+                  Get Started Now
                 </Button>
               </Link>
               <Link to="/browse">
-                <Button variant="outline" size="lg" iconRight={ArrowRight}>
-                  Explore Listings
+                <Button variant="secondary" size="lg" iconRight={ArrowRight}>
+                  Explore Products
                 </Button>
               </Link>
             </div>
           </div>
         </section>
       </div>
-    </>
+    </PageTransition>
   );
 }

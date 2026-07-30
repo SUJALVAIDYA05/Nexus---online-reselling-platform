@@ -1,16 +1,18 @@
 .card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   overflow: hidden;
   transition: all var(--transition);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-md);
 }
 
 .card-hover:hover {
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-3px);
-  border-color: var(--border);
+  transform: translateY(-4px);
+  border-color: rgba(244, 63, 94, 0.35);
 }
 
 .card-no-pad > .card-body {
@@ -35,5 +37,5 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.02);
 }
