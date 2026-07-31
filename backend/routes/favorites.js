@@ -4,10 +4,11 @@ const mongoose = require('mongoose');
 const Favorite = require('../models/Favorite');
 const Listing = require('../models/Listing');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const requireRole = require('../middleware/requireRole');
 const validateObjectId = require('../middleware/validateObjectId');
 
-// All favorites routes are protected
-router.use(authMiddleware);
+// All favorites routes are protected and buyer/admin only (sellers don't buy)
+router.use(authMiddleware, requireRole('buyer', 'admin'));
 
 // ---------------------------------------------------------------------------
 // POST /api/favorites — add a listing to favorites

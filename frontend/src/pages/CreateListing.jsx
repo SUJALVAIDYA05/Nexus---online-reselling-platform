@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Upload, X, MapPin, Tag, FileText, DollarSign, PlusCircle } from 'lucide-react';
+import { Upload, X, MapPin, Tag, FileText, IndianRupee, PlusCircle } from 'lucide-react';
 import Input, { Textarea, Select } from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import PageTransition from '../components/ui/PageTransition';
@@ -145,9 +145,10 @@ export default function CreateListing() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <Input
-                  label="Price (₹)"
+                  label="Price"
                   type="number"
-                  placeholder="0.00"
+                  icon={IndianRupee}
+                  placeholder="0"
                   value={form.price}
                   onChange={e => setForm({ ...form, price: e.target.value })}
                   error={errors.price}

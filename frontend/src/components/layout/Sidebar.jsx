@@ -1,20 +1,25 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Package, Heart, ShoppingCart, MessageCircle, Settings, User, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Package, Heart, ShoppingCart, MessageCircle, Settings, User, PlusCircle, ShieldCheck } from 'lucide-react';
 import './Sidebar.css';
 
 export default function Sidebar() {
   const { user } = useAuth();
+  const role = user?.role;
+  const canSell = role === 'seller' || role === 'admin';
+  const canBuy = role === 'buyer' || role === 'admin';
+  const isAdmin = role === 'admin';
 
   const links = [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/dashboard/my-listings', icon: Package, label: 'My Listings' },
-    { to: '/create-listing', icon: PlusCircle, label: 'Create Listing' },
-    { to: '/favorites', icon: Heart, label: 'Wishlist' },
-    { to: '/orders', icon: ShoppingCart, label: 'Orders' },
-    { to: '/messages', icon: MessageCircle, label: 'Messages' },
-    { to: '/dashboard/profile', icon: User, label: 'Profile' },
-    { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', show: true },
+    { to: '/dashboard/my-listings', icon: Package, label: 'My Listings', show: canSell },
+    { to: '/create-listing', icon: PlusCircle, label: 'Create Listing', show: canSell },
+    { to: '/favorites', icon: Heart, label: 'Wishlist', show: canBuy },
+    { to: '/orders', icon: ShoppingCart, label: 'Orders', show: true },
+    { to: '/messages', icon: MessageCircle, label: 'Messages', show: true },
+    { to: '/dashboard/profile', icon: User, label: 'Profile', show: true },
+    { to: '/dashboard/settings', icon: Settings, label: 'Settings', show: true },
+    { to: '/admin', icon: ShieldCheck, label: 'Admin Dashboard', show: isAdmin },
   ];
 
   return (
@@ -27,7 +32,7 @@ export default function Sidebar() {
         </div>
       </div>
       <nav className="sidebar-nav">
-        {links.map(({ to, icon: Icon, label }) => (
+        {links.filter(l => l.show).map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}

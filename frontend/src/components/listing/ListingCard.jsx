@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Heart } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useFavorites } from '../../context/FavoritesContext';
 import './ListingCard.css';
 
 const conditionColors = {
@@ -12,7 +14,21 @@ const conditionColors = {
 };
 
 export default function ListingCard({ listing, onFavorite, isFavorited }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isFavorited: isFav, toggleFavorite } = useFavorites();
+
   const formatPrice = (p) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(p);
+  const favorited = onFavorite ? !!isFavorited : isFav(listing._id);
+  const isSeller = user?.role === 'seller';
+
+  const handleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) { navigate('/login'); return; }
+    if (onFavorite) onFavorite(listing._id);
+    else toggleFavorite(listing._id);
+  };
 
   return (
     <motion.div 
@@ -35,14 +51,16 @@ export default function ListingCard({ listing, onFavorite, isFavorited }) {
             {listing.condition}
           </span>
         )}
-        <motion.button
-          className={`listing-card-fav ${isFavorited ? 'favorited' : ''}`}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onFavorite?.(listing._id); }}
-          whileTap={{ scale: 0.8 }}
-          whileHover={{ scale: 1.15 }}
-        >
-          <Heart size={16} fill={isFavorited ? 'currentColor' : 'none'} />
-        </motion.button>
+        {!isSeller && (
+          <motion.button
+            className={`listing-card-fav ${favorited ? 'favorited' : ''}`}
+            onClick={handleFavorite}
+            whileTap={{ scale: 0.8 }}
+            whileHover={{ scale: 1.15 }}
+          >
+            <Heart size={16} fill={favorited ? 'currentColor' : 'none'} />
+          </motion.button>
+        )}
       </Link>
 
       <div className="listing-card-body">

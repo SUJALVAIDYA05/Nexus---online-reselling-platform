@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 import {
-  ShoppingCart, Package, TrendingUp, Clock,
-  CheckCircle2, XCircle, Eye
+  ShoppingCart, Package, TrendingUp, Eye, Receipt, MapPin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { users, favorites } from '../api/api';
+import { orders } from '../api/api';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import Spinner from '../components/ui/Spinner';
@@ -14,75 +14,106 @@ import PageTransition from '../components/ui/PageTransition';
 
 const fmt = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
 
-const tabs = [
-  { key: 'all', label: 'All Orders', icon: ShoppingCart },
-  { key: 'purchases', label: 'Purchases', icon: Package },
-  { key: 'sales', label: 'My Sales', icon: TrendingUp },
-];
+const statusMeta = {
+  pending: { label: 'Pending', color: '#f59e0b' },
+  confirmed: { label: 'Confirmed', color: '#6366f1' },
+  shipped: { label: 'Shipped', color: '#3b82f6' },
+  completed: { label: 'Completed', color: '#10b981' },
+  cancelled: { label: 'Cancelled', color: '#f43f5e' },
+};
+
+const ORDER_STATUSES = ['pending', 'confirmed', 'shipped', 'completed', 'cancelled'];
 
 const styles = `
   .ord-page { padding: 40px 0 80px; }
   .ord-tabs { display: flex; gap: 12px; margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-  .ord-tab { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-full); background: transparent; color: var(--text-secondary); border: 1px solid transparent; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+  .ord-tab { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-full); background: transparent; color: var(--text-secondary); border: 1px solid transparent; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; font-family: var(--font); }
   .ord-tab:hover { color: #ffffff; background: rgba(255,255,255,0.05); }
   .ord-tab.active { background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.3); color: #ffffff; }
 
   .ord-list { display: flex; flex-direction: column; gap: 16px; }
-  .ord-card { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-  .ord-img { width: 72px; height: 72px; border-radius: var(--radius-lg); overflow: hidden; background: #070a12; flex-shrink: 0; }
+  .ord-card { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; }
+  .ord-card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .ord-img { width: 56px; height: 56px; border-radius: var(--radius-md); overflow: hidden; background: #070a12; flex-shrink: 0; }
   .ord-img img { width: 100%; height: 100%; object-fit: cover; }
+  .ord-item { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+  .ord-item:last-child { border-bottom: none; }
+  .ord-status { padding: 4px 12px; border-radius: var(--radius-full); font-size: 12px; font-weight: 700; border: 1px solid var(--border); }
 `;
 
 export default function Orders() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('all');
-  const [sales, setSales] = useState([]);
-  const [purchases, setPurchases] = useState([]);
+  const role = user?.role;
+  const isAdmin = role === 'admin';
+
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
+      setLoading(true);
       try {
-        const [salesRes, favRes] = await Promise.allSettled([
-          users.getListings(user.id || user._id),
-          favorites.list(),
-        ]);
-        const salesData = salesRes.status === 'fulfilled' ? salesRes.value : [];
-        setSales(Array.isArray(salesData) ? salesData : (salesData.listings || []));
-
-        const favData = favRes.status === 'fulfilled' ? favRes.value : [];
-        const favArr = Array.isArray(favData) ? favData : (favData.favorites || []);
-        const purchasesArr = favArr
-          .filter(f => f.listing)
-          .map((f) => ({
-            ...f.listing,
-            _orderType: 'purchase',
-            _orderStatus: f.listing.status === 'sold' ? 'completed' : 'pending',
-            _orderDate: f.createdAt || new Date().toISOString(),
-          }));
-        setPurchases(purchasesArr);
+        const res = await orders.list({ limit: 100 });
+        setData(res.orders || []);
+        if (!isAdmin) {
+          setActiveTab(role === 'seller' ? 'sales' : 'purchases');
+        }
       } catch {
-        // silent
+        setData([]);
       } finally {
         setLoading(false);
       }
     };
     if (user) fetchOrders();
-  }, [user]);
+  }, [user, role, isAdmin]);
 
-  const allOrders = [
-    ...sales.map(l => ({
-      ...l,
-      _orderType: 'sale',
-      _orderStatus: l.status === 'sold' ? 'completed' : 'active',
-      _orderDate: l.createdAt,
-    })),
-    ...purchases,
-  ].sort((a, b) => new Date(b._orderDate) - new Date(a._orderDate));
+  const myId = user?.id || user?._id;
 
-  const filtered = activeTab === 'all' ? allOrders
-    : activeTab === 'sales' ? allOrders.filter(o => o._orderType === 'sale')
-    : allOrders.filter(o => o._orderType === 'purchase');
+  const tabs = useMemo(() => {
+    if (isAdmin) {
+      return [
+        { key: 'all', label: 'All Orders', icon: ShoppingCart },
+        { key: 'purchases', label: 'Purchases', icon: Package },
+        { key: 'sales', label: 'My Sales', icon: TrendingUp },
+      ];
+    }
+    if (role === 'seller') {
+      return [{ key: 'sales', label: 'My Sales', icon: TrendingUp }];
+    }
+    return [{ key: 'purchases', label: 'Purchases', icon: Package }];
+  }, [role, isAdmin]);
+
+  const filtered = useMemo(() => {
+    if (activeTab === 'all') return data;
+    if (activeTab === 'sales') {
+      return data.filter(o => o.items?.some(i => (i.seller?._id || i.seller)?.toString() === myId));
+    }
+    return data.filter(o => (o.buyer?._id || o.buyer)?.toString() === myId);
+  }, [data, activeTab, myId]);
+
+  const handleStatusChange = async (orderId, status) => {
+    setUpdatingId(orderId);
+    try {
+      await orders.updateStatus(orderId, status);
+      setData(prev => prev.map(o => o._id === orderId ? { ...o, status } : o));
+      toast.success('Order status updated');
+    } catch (err) {
+      toast.error(err?.message || 'Could not update order status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const canManageStatus = (order) => {
+    if (!user) return false;
+    if (role === 'admin') return true;
+    if (role === 'seller') {
+      return order.items?.some(i => (i.seller?._id || i.seller)?.toString() === myId);
+    }
+    return false;
+  };
 
   return (
     <PageTransition>
@@ -90,7 +121,9 @@ export default function Orders() {
       <div className="ord-page">
         <header style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 32, fontWeight: 800, color: '#ffffff' }}>Orders & Activity</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Track your marketplace purchases and sales history</p>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {role === 'seller' ? 'Track the items you have sold' : 'Track your marketplace purchases'}
+          </p>
         </header>
 
         <div className="ord-tabs">
@@ -112,9 +145,11 @@ export default function Orders() {
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            icon={ShoppingCart}
+            icon={Receipt}
             title="No orders found"
-            description="Start buying or selling on Nexus to see your activity here."
+            description={role === 'seller'
+              ? 'When buyers purchase your items, your sales will appear here.'
+              : 'Complete a checkout to see your purchase history here.'}
             action={
               <Link to="/browse">
                 <Button icon={Eye}>Explore Marketplace</Button>
@@ -124,29 +159,79 @@ export default function Orders() {
         ) : (
           <div className="ord-list">
             {filtered.map(order => (
-              <motion.div 
-                key={order._id}
-                className="ord-card"
-                whileHover={{ y: -2 }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div className="ord-img">
-                    {order.images?.[0]?.url && <img src={order.images[0].url} alt={order.title} />}
-                  </div>
+              <motion.div key={order._id} className="ord-card" whileHover={{ y: -2 }}>
+                <div className="ord-card-head">
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff', marginBottom: 4 }}>{order.title}</div>
-                    <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
-                      Type: <strong style={{ color: order._orderType === 'sale' ? '#10b981' : 'var(--accent)' }}>{order._orderType.toUpperCase()}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 15, fontWeight: 800, color: '#ffffff' }}>Order #{order._id?.slice(-8)}</span>
+                      <span className="ord-status" style={{ color: statusMeta[order.status]?.color || 'var(--text-secondary)' }}>
+                        {statusMeta[order.status]?.label || order.status}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>
+                      {new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      {' · '}{order.paymentMethod?.toUpperCase()}
+                      {!isAdmin && order.shippingAddress?.city && (
+                        <> · <MapPin size={12} style={{ verticalAlign: -2 }} /> {order.shippingAddress.city}, {order.shippingAddress.state}</>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--accent)' }}>{fmt.format(order.totalAmount)}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                      {order.items?.length} item{order.items?.length > 1 ? 's' : ''} · incl. {fmt.format(order.platformFee)} fee
                     </div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', marginBottom: 4 }}>{fmt.format(order.price)}</div>
-                  <Link to={`/listing/${order._id}`}>
-                    <Button variant="ghost" size="sm" icon={Eye}>View Listing</Button>
-                  </Link>
+                <div>
+                  {order.items?.map(item => {
+                    const listing = item.listing || {};
+                    const sellerName = item.seller?.name || 'Seller';
+                    return (
+                      <div key={listing._id || item.listing} className="ord-item">
+                        <div className="ord-img">
+                          {listing.images?.[0]?.url && <img src={listing.images[0].url} alt={listing.title} />}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: '#ffffff', fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {listing.title || 'Listing'}
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                            {role === 'seller' ? `Buyer: ${order.buyer?.name || '—'}` : `Sold by: ${sellerName}`}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                          {fmt.format(item.priceAtPurchase)}
+                        </div>
+                        {listing._id && (
+                          <Link to={`/listing/${listing._id}`}>
+                            <Button variant="ghost" size="sm" icon={Eye}>View</Button>
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
+
+                {canManageStatus(order) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-light)' }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Update Status:</span>
+                    <select
+                      value={order.status}
+                      disabled={updatingId === order._id}
+                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                      style={{
+                        background: 'var(--bg-secondary)', color: 'var(--text)', border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-md)', padding: '8px 12px', fontSize: 13, fontFamily: 'var(--font)',
+                      }}
+                    >
+                      {ORDER_STATUSES.map(s => (
+                        <option key={s} value={s}>{statusMeta[s]?.label || s}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>

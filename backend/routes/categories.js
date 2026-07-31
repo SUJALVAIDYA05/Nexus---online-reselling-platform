@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const requireRole = require('../middleware/requireRole');
 
 // ---------------------------------------------------------------------------
 // GET /api/categories — list all categories (parent populated)
@@ -20,9 +21,9 @@ router.get('/', async (_req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/categories — create a category (protected)
+// POST /api/categories — create a category (admin only)
 // ---------------------------------------------------------------------------
-router.post('/', authMiddleware, async (req, res, next) => {
+router.post('/', authMiddleware, requireRole('admin'), async (req, res, next) => {
   try {
     const { name, parent } = req.body;
 

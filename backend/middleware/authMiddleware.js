@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -7,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
  */
 function generateToken(user) {
   return jwt.sign(
-    { id: user._id, email: user.email, name: user.name },
+    { id: user._id, email: user.email, name: user.name, role: user.role },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -15,19 +16,48 @@ function generateToken(user) {
 
 /**
  * Express middleware — verifies the JWT from an httpOnly cookie or
- * the Authorization header and attaches the decoded payload to req.user.
+ * the Authorization header, then attaches the CURRENT user document
+ * (including role) to req.user.
+ *
+ * Pass { optional: true } to treat missing/invalid tokens as anonymous
+ * (req.user stays undefined) instead of returning 401.
  */
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next, options = {}) {
   const token =
     req.cookies?.token || req.headers.authorization?.split(' ')[1];
 
-  if (!token) return res.status(401).json({ error: 'Not authenticated' });
+  if (!token) {
+    if (options.optional) return next();
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
 
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET);
+    // Fetch the full user doc so role/account state is always current
+    const user = await User.findById(payload.id).lean();
+    if (!user) {
+      if (options.optional) return next();
+      return res.status(401).json({ error: 'User not found' });
+    }
+    req.user = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      location: user.location,
+      avatarUrl: user.avatarUrl,
+    };
     next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid or expired token' });
+  } catch (err) {
+    if (
+      err.name === 'JsonWebTokenError' ||
+      err.name === 'TokenExpiredError'
+    ) {
+      if (options.optional) return next();
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    next(err);
   }
 }
 

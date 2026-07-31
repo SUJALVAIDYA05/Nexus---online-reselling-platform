@@ -9,7 +9,7 @@ import ListingCard from '../components/listing/ListingCard';
 import Pagination from '../components/ui/Pagination';
 import EmptyState from '../components/ui/EmptyState';
 import PageTransition from '../components/ui/PageTransition';
-import { listings, categories, favorites } from '../api/api';
+import { listings, categories } from '../api/api';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -89,7 +89,6 @@ export default function Search() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [allCategories, setAllCategories] = useState([]);
-  const [favIds, setFavIds] = useState(new Set());
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const abortRef = useRef(null);
 
@@ -135,13 +134,6 @@ export default function Search() {
   }, [query, category, minPrice, maxPrice, location, sort, page]);
 
   useEffect(() => {
-    favorites.list().then(data => {
-      const favs = data.favorites || data;
-      setFavIds(new Set(favs.map(f => typeof f.listing === 'object' ? f.listing._id : f.listing)));
-    }).catch(() => {});
-  }, [results]);
-
-  useEffect(() => {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (category) params.set('category', category);
@@ -158,24 +150,6 @@ export default function Search() {
     setQuery(val);
     setPage(1);
   }, []);
-
-  const handleFavorite = useCallback(async (listingId) => {
-    const wasFav = favIds.has(listingId);
-    setFavIds(prev => {
-      const next = new Set(prev);
-      wasFav ? next.delete(listingId) : next.add(listingId);
-      return next;
-    });
-    try {
-      wasFav ? await favorites.remove(listingId) : await favorites.add(listingId);
-    } catch {
-      setFavIds(prev => {
-        const next = new Set(prev);
-        wasFav ? next.add(listingId) : next.delete(listingId);
-        return next;
-      });
-    }
-  }, [favIds]);
 
   const handleReset = useCallback(() => {
     setQuery('');
@@ -387,8 +361,6 @@ export default function Search() {
                     <ListingCard
                       key={item._id}
                       listing={item}
-                      onFavorite={handleFavorite}
-                      isFavorited={favIds.has(item._id)}
                     />
                   ))}
                 </motion.div>

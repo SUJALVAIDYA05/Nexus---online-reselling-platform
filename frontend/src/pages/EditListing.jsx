@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Pencil, Save, X } from 'lucide-react';
+import { Pencil, Save, X, IndianRupee } from 'lucide-react';
 import Input, { Textarea, Select } from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { PageLoader } from '../components/ui/Spinner';
@@ -120,8 +120,9 @@ export default function EditListing() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <Input
-                  label="Price (₹)"
+                  label="Price"
                   type="number"
+                  icon={IndianRupee}
                   value={form.price}
                   onChange={e => setForm({ ...form, price: e.target.value })}
                 />

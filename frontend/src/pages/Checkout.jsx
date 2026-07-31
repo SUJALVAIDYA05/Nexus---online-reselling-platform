@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Smartphone, Lock, ArrowLeft, Truck, CheckCircle2, ShieldCheck, CreditCard } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { Smartphone, Lock, ArrowLeft, Truck, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { orders } from '../api/api';
 import Button from '../components/ui/Button';
 import Input, { Select } from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
@@ -100,21 +101,36 @@ export default function Checkout() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessModal(true);
+    try {
+      await orders.create({
+        items: items.map(i => i._id),
+        shippingAddress: {
+          fullName: formData.fullName.trim(),
+          phone: formData.phone.trim(),
+          pincode: formData.pincode.trim(),
+          addressLine: formData.address.trim(),
+          city: formData.city.trim(),
+          state: formData.state,
+        },
+        paymentMethod,
+      });
       confetti({
         particleCount: 120,
         spread: 70,
         origin: { y: 0.6 }
       });
       clearCart();
-    }, 1200);
+      setSuccessModal(true);
+    } catch (err) {
+      toast.error(err?.message || 'Could not place your order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0 && !successModal) {

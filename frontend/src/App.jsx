@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { FavoritesProvider } from './context/FavoritesContext';
 import Layout from './components/layout/Layout';
 import DashboardLayout from './components/layout/DashboardLayout';
+import RequireRole from './components/RequireRole';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -25,6 +27,7 @@ import About from './pages/About';
 import Services from './pages/Services';
 import Testimonials from './pages/Testimonials';
 import NotFound from './pages/NotFound';
+import AdminDashboard from './pages/AdminDashboard';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -45,6 +48,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
+          <FavoritesProvider>
           <Toaster
             position="top-right"
             toastOptions={{
@@ -73,23 +77,25 @@ export default function App() {
               <Route path="listing/:id" element={<ListingDetail />} />
               <Route path="login" element={<GuestRoute><Login /></GuestRoute>} />
               <Route path="register" element={<GuestRoute><Register /></GuestRoute>} />
-              <Route path="cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-              <Route path="checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-              <Route path="favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+              <Route path="cart" element={<ProtectedRoute><RequireRole allow={['buyer', 'admin']}><Cart /></RequireRole></ProtectedRoute>} />
+              <Route path="checkout" element={<ProtectedRoute><RequireRole allow={['buyer', 'admin']}><Checkout /></RequireRole></ProtectedRoute>} />
+              <Route path="favorites" element={<ProtectedRoute><RequireRole allow={['buyer', 'admin']}><Favorites /></RequireRole></ProtectedRoute>} />
               <Route path="orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
               <Route path="messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-              <Route path="create-listing" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
-              <Route path="listing-success" element={<ProtectedRoute><ListingSuccess /></ProtectedRoute>} />
-              <Route path="edit-listing/:id" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
+              <Route path="create-listing" element={<ProtectedRoute><RequireRole allow={['seller', 'admin']}><CreateListing /></RequireRole></ProtectedRoute>} />
+              <Route path="listing-success" element={<ProtectedRoute><RequireRole allow={['seller', 'admin']}><ListingSuccess /></RequireRole></ProtectedRoute>} />
+              <Route path="edit-listing/:id" element={<ProtectedRoute><RequireRole allow={['seller', 'admin']}><EditListing /></RequireRole></ProtectedRoute>} />
+              <Route path="admin" element={<ProtectedRoute><RequireRole allow={['admin']}><AdminDashboard /></RequireRole></ProtectedRoute>} />
               <Route path="dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<Dashboard />} />
-                <Route path="my-listings" element={<MyListings />} />
+                <Route path="my-listings" element={<RequireRole allow={['seller', 'admin']}><MyListings /></RequireRole>} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </FavoritesProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

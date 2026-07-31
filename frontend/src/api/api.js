@@ -48,6 +48,27 @@ export const auth = {
   logout: () => api.post('/auth/logout'),
 };
 
+export const users = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    ).toString();
+    return api.get(`/users${qs ? `?${qs}` : ''}`);
+  },
+  getListings: (id) => api.get(`/users/${id}/listings`),
+  updateProfile: (data) => api.put('/users/profile', data),
+};
+
+export const orders = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return api.get(`/orders${qs ? `?${qs}` : ''}`);
+  },
+  get: (id) => api.get(`/orders/${id}`),
+  create: (data) => api.post('/orders', data),
+  updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
+};
+
 export const listings = {
   list: (params = {}) => {
     const qs = new URLSearchParams(
@@ -70,10 +91,6 @@ export const favorites = {
   list: () => api.get('/favorites'),
   add: (listingId) => api.post('/favorites', { listingId }),
   remove: (listingId) => api.delete(`/favorites/${listingId}`),
-};
-
-export const users = {
-  getListings: (id) => api.get(`/users/${id}/listings`),
 };
 
 export const conversations = {

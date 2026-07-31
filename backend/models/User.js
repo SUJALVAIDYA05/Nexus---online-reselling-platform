@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Password is required'],
       select: false, // excluded from queries by default
     },
+    role: {
+      type: String,
+      enum: ['buyer', 'seller', 'admin'],
+      default: 'buyer',
+    },
     phone: {
       type: String,
       default: null,

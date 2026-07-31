@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { Menu, X, ShoppingCart, Heart, MessageCircle, Bell, User, LogOut, LayoutDashboard, Package, Search } from 'lucide-react';
+import { Menu, X, ShoppingCart, Heart, MessageCircle, Bell, User, LogOut, LayoutDashboard, Package, ShieldCheck, Search } from 'lucide-react';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -12,6 +12,10 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
+
+  const canSell = user && (user.role === 'seller' || user.role === 'admin');
+  const canBuy = user && (user.role === 'buyer' || user.role === 'admin');
+  const isAdmin = user?.role === 'admin';
 
   const handleLogout = async () => {
     await logout();
@@ -48,9 +52,21 @@ export default function Navbar() {
               <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
                 Dashboard
               </NavLink>
-              <NavLink to="/dashboard/my-listings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
-                My Listings
-              </NavLink>
+              {canSell && (
+                <>
+                  <NavLink to="/create-listing" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+                    Sell an item
+                  </NavLink>
+                  <NavLink to="/dashboard/my-listings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+                    My Listings
+                  </NavLink>
+                </>
+              )}
+              {isAdmin && (
+                <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMobileOpen(false)}>
+                  Admin
+                </NavLink>
+              )}
             </>
           )}
         </div>
@@ -64,23 +80,27 @@ export default function Navbar() {
               <Link to="/messages" className="nav-icon-btn" title="Messages">
                 <MessageCircle size={19} />
               </Link>
-              <Link to="/favorites" className="nav-icon-btn" title="Wishlist">
-                <Heart size={19} />
-              </Link>
-              <Link to="/cart" className="nav-icon-btn cart-btn" title="Cart">
-                <ShoppingCart size={19} />
-                {count > 0 && (
-                  <motion.span 
-                    className="cart-badge"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                    key={count}
-                  >
-                    {count}
-                  </motion.span>
-                )}
-              </Link>
+              {canBuy && (
+                <>
+                  <Link to="/favorites" className="nav-icon-btn" title="Wishlist">
+                    <Heart size={19} />
+                  </Link>
+                  <Link to="/cart" className="nav-icon-btn cart-btn" title="Cart">
+                    <ShoppingCart size={19} />
+                    {count > 0 && (
+                      <motion.span 
+                        className="cart-badge"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                        key={count}
+                      >
+                        {count}
+                      </motion.span>
+                    )}
+                  </Link>
+                </>
+              )}
 
               <div className="profile-menu-wrapper">
                 <motion.button 
@@ -111,15 +131,22 @@ export default function Navbar() {
                         <Link to="/dashboard" className="profile-item" onClick={() => setProfileOpen(false)}>
                           <LayoutDashboard size={16} /> Dashboard
                         </Link>
-                        <Link to="/dashboard/my-listings" className="profile-item" onClick={() => setProfileOpen(false)}>
-                          <Package size={16} /> My Listings
-                        </Link>
+                        {canSell && (
+                          <Link to="/dashboard/my-listings" className="profile-item" onClick={() => setProfileOpen(false)}>
+                            <Package size={16} /> My Listings
+                          </Link>
+                        )}
                         <Link to="/dashboard/profile" className="profile-item" onClick={() => setProfileOpen(false)}>
                           <User size={16} /> Profile
                         </Link>
                         <Link to="/orders" className="profile-item" onClick={() => setProfileOpen(false)}>
                           <Bell size={16} /> Orders
                         </Link>
+                        {isAdmin && (
+                          <Link to="/admin" className="profile-item" onClick={() => setProfileOpen(false)}>
+                            <ShieldCheck size={16} /> Admin Dashboard
+                          </Link>
+                        )}
                         <div className="profile-dropdown-divider" />
                         <button className="profile-item profile-item-danger" onClick={handleLogout}>
                           <LogOut size={16} /> Sign Out

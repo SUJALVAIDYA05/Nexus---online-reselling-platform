@@ -3,6 +3,7 @@ const router = express.Router();
 const Listing = require('../models/Listing');
 const cloudinary = require('../config/cloudinary');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const requireRole = require('../middleware/requireRole');
 const validateObjectId = require('../middleware/validateObjectId');
 
 // ---------------------------------------------------------------------------
@@ -149,9 +150,9 @@ router.get('/:id', validateObjectId('id'), async (req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/listings — create a listing (protected)
+// POST /api/listings — create a listing (protected, seller/admin only)
 // ---------------------------------------------------------------------------
-router.post('/', authMiddleware, async (req, res, next) => {
+router.post('/', authMiddleware, requireRole('seller', 'admin'), async (req, res, next) => {
   try {
     const { title, description, price, category, condition, images, location } =
       req.body;
@@ -187,15 +188,15 @@ router.post('/', authMiddleware, async (req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
-// PUT /api/listings/:id — update a listing (protected, owner-only)
+// PUT /api/listings/:id — update a listing (protected, owner seller OR admin)
 // ---------------------------------------------------------------------------
 router.put('/:id', authMiddleware, validateObjectId('id'), async (req, res, next) => {
   try {
     const listing = await Listing.findById(req.params.id);
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
 
-    // Only the owning seller can update
-    if (listing.seller.toString() !== req.user.id) {
+    // Only the owning seller can update — unless the caller is an admin
+    if (req.user.role !== 'admin' && listing.seller.toString() !== req.user.id) {
       return res.status(403).json({ error: 'You can only edit your own listings' });
     }
 
@@ -238,14 +239,14 @@ router.put('/:id', authMiddleware, validateObjectId('id'), async (req, res, next
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /api/listings/:id — permanently delete (protected, owner-only)
+// DELETE /api/listings/:id — permanently delete (protected, owner seller OR admin)
 // ---------------------------------------------------------------------------
 router.delete('/:id', authMiddleware, validateObjectId('id'), async (req, res, next) => {
   try {
     const listing = await Listing.findById(req.params.id);
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
 
-    if (listing.seller.toString() !== req.user.id) {
+    if (req.user.role !== 'admin' && listing.seller.toString() !== req.user.id) {
       return res.status(403).json({ error: 'You can only delete your own listings' });
     }
 

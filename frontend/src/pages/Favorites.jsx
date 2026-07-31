@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { favorites } from '../api/api';
+import { useFavorites } from '../context/FavoritesContext';
 import ListingCard from '../components/listing/ListingCard';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
@@ -11,33 +9,7 @@ import Spinner from '../components/ui/Spinner';
 import PageTransition from '../components/ui/PageTransition';
 
 export default function Favorites() {
-  const { user } = useAuth();
-  const [favListings, setFavListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      try {
-        const data = await favorites.list();
-        const arr = Array.isArray(data) ? data : (data.favorites || []);
-        setFavListings(arr.filter(f => f.listing).map(f => f.listing));
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (user) fetchFavorites();
-  }, [user]);
-
-  const handleRemove = useCallback(async (listingId) => {
-    try {
-      await favorites.remove(listingId);
-      setFavListings(prev => prev.filter(l => l._id !== listingId));
-    } catch {
-      // silent
-    }
-  }, []);
+  const { favoriteListings, loading } = useFavorites();
 
   return (
     <PageTransition>
@@ -48,7 +20,7 @@ export default function Favorites() {
             Saved Wishlist
           </h1>
           <p style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>
-            {!loading && `${favListings.length} ${favListings.length === 1 ? 'item' : 'items'} saved in your list`}
+            {!loading && `${favoriteListings.length} ${favoriteListings.length === 1 ? 'item' : 'items'} saved in your list`}
           </p>
         </header>
 
@@ -56,7 +28,7 @@ export default function Favorites() {
           <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
             <Spinner size={36} />
           </div>
-        ) : favListings.length === 0 ? (
+        ) : favoriteListings.length === 0 ? (
           <EmptyState
             icon={Heart}
             title="Your wishlist is empty"
@@ -78,7 +50,7 @@ export default function Favorites() {
             }}
           >
             <AnimatePresence>
-              {favListings.map(listing => (
+              {favoriteListings.map(listing => (
                 <motion.div
                   key={listing._id}
                   layout
@@ -86,11 +58,7 @@ export default function Favorites() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                 >
-                  <ListingCard
-                    listing={listing}
-                    onFavorite={() => handleRemove(listing._id)}
-                    isFavorited={true}
-                  />
+                  <ListingCard listing={listing} />
                 </motion.div>
               ))}
             </AnimatePresence>

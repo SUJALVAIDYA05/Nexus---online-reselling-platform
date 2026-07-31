@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Package, Heart, MessageCircle, TrendingUp,
-  PlusCircle, Search, ShoppingBag, ArrowUpRight, Calendar
+  Package, Heart, MessageCircle, TrendingUp, Users, ShoppingBag,
+  PlusCircle, Search, ArrowUpRight, Calendar, Receipt
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { listings, favorites, users } from '../api/api';
+import { useFavorites } from '../context/FavoritesContext';
+import { listings, users, orders } from '../api/api';
 import Button from '../components/ui/Button';
 import ListingCard from '../components/listing/ListingCard';
 import PageTransition from '../components/ui/PageTransition';
@@ -38,23 +39,35 @@ const styles = `
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { favoriteListings } = useFavorites();
   const [myListings, setMyListings] = useState([]);
-  const [favItems, setFavItems] = useState([]);
   const [recentListings, setRecentListings] = useState([]);
+  const [activeListingsTotal, setActiveListingsTotal] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
+  const [userCount, setUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const role = user?.role;
+  const canSell = role === 'seller' || role === 'admin';
+  const isAdmin = role === 'admin';
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [myRes, favRes, recentRes] = await Promise.allSettled([
-          users.getListings(user.id || user._id),
-          favorites.list(),
-          listings.list({ limit: 4, sort: '-createdAt' }),
-        ]);
-        const myData = myRes.status === 'fulfilled' ? myRes.value : [];
-        setMyListings(Array.isArray(myData) ? myData : (myData.listings || []));
-        setFavItems(favRes.status === 'fulfilled' ? (Array.isArray(favRes.value) ? favRes.value : (favRes.value.favorites || [])) : []);
-        setRecentListings(recentRes.status === 'fulfilled' ? (recentRes.value.listings || []) : []);
+        const recentRes = await listings.list({ limit: 4 });
+        setRecentListings(recentRes.listings || []);
+        setActiveListingsTotal(recentRes.total || 0);
+
+        if (canSell) {
+          const myRes = await users.getListings(user.id || user._id).catch(() => []);
+          setMyListings(Array.isArray(myRes) ? myRes : (myRes.listings || []));
+        }
+        const orderRes = await orders.list({ limit: 1 }).catch(() => null);
+        setOrderCount(orderRes?.total || 0);
+        if (isAdmin) {
+          const usersRes = await users.list({ limit: 1 }).catch(() => null);
+          setUserCount(usersRes?.total || 0);
+        }
       } catch {
         // silent
       } finally {
@@ -62,19 +75,35 @@ export default function Dashboard() {
       }
     };
     if (user) fetchData();
-  }, [user]);
+  }, [user, canSell, isAdmin]);
 
   const activeListings = myListings.filter(l => l.status === 'active');
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
-  const stats = [
-    { label: 'My Listings', value: myListings.length, icon: Package, color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
-    { label: 'Active Deals', value: activeListings.length, icon: TrendingUp, color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-    { label: 'Wishlist Items', value: favItems.length, icon: Heart, color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
-    { label: 'Chat Inquiries', value: 0, icon: MessageCircle, color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-  ];
+  let stats = [];
+  if (isAdmin) {
+    stats = [
+      { label: 'Total Users', value: userCount, icon: Users, color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
+      { label: 'Active Listings', value: activeListingsTotal, icon: Package, color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
+      { label: 'Total Orders', value: orderCount, icon: Receipt, color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+      { label: 'Chat Inquiries', value: 0, icon: MessageCircle, color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+    ];
+  } else if (role === 'seller') {
+    stats = [
+      { label: 'My Listings', value: myListings.length, icon: Package, color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
+      { label: 'Active Deals', value: activeListings.length, icon: TrendingUp, color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+      { label: 'Total Sales', value: orderCount, icon: Receipt, color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
+      { label: 'Chat Inquiries', value: 0, icon: MessageCircle, color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+    ];
+  } else {
+    stats = [
+      { label: 'My Orders', value: orderCount, icon: ShoppingBag, color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
+      { label: 'Wishlist Items', value: favoriteListings.length, icon: Heart, color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
+      { label: 'Chat Inquiries', value: 0, icon: MessageCircle, color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+    ];
+  }
 
   return (
     <PageTransition>
@@ -85,9 +114,11 @@ export default function Dashboard() {
             <h1 className="db-welcome">Welcome back, {user?.name?.split(' ')[0]} 👋</h1>
             <div className="db-date"><Calendar size={14} /> {today}</div>
           </div>
-          <Link to="/create-listing">
-            <Button icon={PlusCircle}>New Listing</Button>
-          </Link>
+          {canSell && (
+            <Link to="/create-listing">
+              <Button icon={PlusCircle}>New Listing</Button>
+            </Link>
+          )}
         </header>
 
         <div className="db-stats">
@@ -132,13 +163,15 @@ export default function Dashboard() {
         <div className="db-section">
           <div className="db-sec-title">Quick Actions</div>
           <div className="quick-grid">
-            <Link to="/create-listing" className="quick-card">
-              <PlusCircle size={28} color="var(--accent)" />
-              <div>
-                <div style={{ fontWeight: 700 }}>Post New Item</div>
-                <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Sell unused items fast</div>
-              </div>
-            </Link>
+            {canSell && (
+              <Link to="/create-listing" className="quick-card">
+                <PlusCircle size={28} color="var(--accent)" />
+                <div>
+                  <div style={{ fontWeight: 700 }}>Post New Item</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Sell unused items fast</div>
+                </div>
+              </Link>
+            )}
             <Link to="/browse" className="quick-card">
               <Search size={28} color="#10b981" />
               <div>
@@ -153,6 +186,15 @@ export default function Dashboard() {
                 <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Track deliveries & status</div>
               </div>
             </Link>
+            {isAdmin && (
+              <Link to="/admin" className="quick-card">
+                <Users size={28} color="#f59e0b" />
+                <div>
+                  <div style={{ fontWeight: 700 }}>Admin Dashboard</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Moderate users, listings & orders</div>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

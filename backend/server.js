@@ -13,6 +13,7 @@ const favoritesRouter = require('./routes/favorites');
 const usersRouter = require('./routes/users');
 const uploadsRouter = require('./routes/uploads');
 const conversationsRouter = require('./routes/messages');
+const ordersRouter = require('./routes/orders');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,10 @@ if (!JWT_SECRET) {
   console.error('FATAL: JWT_SECRET is not set. Exiting.');
   process.exit(1);
 }
+
+// The admin role is granted automatically ONLY when this email signs up/exists.
+// It can never be chosen or assigned by a client request.
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'sujalv641@gmail.com').toLowerCase();
 
 // --- Middleware ---
 app.use(express.json());
@@ -48,7 +53,7 @@ app.use((req, res, next) => {
 // POST /api/auth/signup
 app.post('/api/auth/signup', async (req, res, next) => {
   try {
-    const { name, email: rawEmail, password } = req.body;
+    const { name, email: rawEmail, password, role } = req.body;
     if (!name || !rawEmail || !password) return res.status(400).json({ error: 'All fields are required' });
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
@@ -59,10 +64,17 @@ app.post('/api/auth/signup', async (req, res, next) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // Password hashing is handled by the User model's pre-save hook
-    const newUser = await User.create({ name, email, password });
+    // Client may only choose between 'buyer' and 'seller' — never 'admin'.
+    // The admin email is granted the role automatically regardless of input.
+    let assignedRole = role === 'seller' ? 'seller' : 'buyer';
+    if (email === ADMIN_EMAIL) {
+      assignedRole = 'admin';
+    }
 
-    const user = { id: newUser._id, name: newUser.name, email: newUser.email };
+    // Password hashing is handled by the User model's pre-save hook
+    const newUser = await User.create({ name, email, password, role: assignedRole });
+
+    const user = { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role };
     const token = generateToken(newUser);
 
     res.cookie('token', token, {
@@ -91,7 +103,14 @@ app.post('/api/auth/login', async (req, res, next) => {
     const match = await userDoc.comparePassword(password);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
-    const user = { id: userDoc._id, name: userDoc.name, email: userDoc.email };
+    // Self-heal: if the admin email already exists (e.g. registered before
+    // roles existed), ensure it always holds the admin role.
+    if (email === ADMIN_EMAIL && userDoc.role !== 'admin') {
+      userDoc.role = 'admin';
+      await userDoc.save();
+    }
+
+    const user = { id: userDoc._id, name: userDoc.name, email: userDoc.email, role: userDoc.role };
     const token = generateToken(userDoc);
 
     res.cookie('token', token, {
@@ -129,6 +148,7 @@ app.use('/api/favorites', favoritesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/conversations', conversationsRouter);
+app.use('/api/orders', ordersRouter);
 
 // --- Serve HTML pages with proper routes ---
 // The original /browse page is preserved as-is per project constraints.

@@ -10,11 +10,11 @@ import {
 import Button from '../components/ui/Button';
 import { PageLoader } from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
-import ListingCard from '../components/listing/ListingCard';
 import PageTransition from '../components/ui/PageTransition';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { listings, favorites, conversations } from '../api/api';
+import { useFavorites } from '../context/FavoritesContext';
+import { listings, conversations } from '../api/api';
 
 const fmtPrice = (p) =>
   new Intl.NumberFormat('en-IN', {
@@ -87,10 +87,9 @@ export default function ListingDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [favLoading, setFavLoading] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
   const [similar, setSimilar] = useState([]);
+  const { isFavorited, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     let cancelled = false;
@@ -122,33 +121,10 @@ export default function ListingDetail() {
     return () => { cancelled = true; };
   }, [id]);
 
-  useEffect(() => {
-    if (!listing || !user) return;
-    favorites.list().then(data => {
-      const favs = data.favorites || data;
-      setIsFavorited(favs.some(f => {
-        const lid = typeof f.listing === 'object' ? f.listing._id : f.listing;
-        return lid === listing._id;
-      }));
-    }).catch(() => {});
-  }, [listing, user]);
-
-  const handleFavorite = useCallback(async () => {
+  const handleFavorite = useCallback(() => {
     if (!user) { navigate('/login'); return; }
-    setFavLoading(true);
-    try {
-      if (isFavorited) {
-        await favorites.remove(listing._id);
-        setIsFavorited(false);
-        toast.success('Removed from wishlist');
-      } else {
-        await favorites.add(listing._id);
-        setIsFavorited(true);
-        toast.success('Added to wishlist');
-      }
-    } catch { /* ignore */ }
-    setFavLoading(false);
-  }, [user, isFavorited, listing, navigate]);
+    toggleFavorite(listing._id);
+  }, [user, toggleFavorite, listing, navigate]);
 
   const handleAddToCart = useCallback(() => {
     if (!user) { navigate('/login'); return; }
@@ -177,6 +153,11 @@ export default function ListingDetail() {
   const images = listing?.images || [];
   const condition = conditionMeta[listing?.condition] || conditionMeta['fair'];
   const inCart = listing ? cartItems.some(i => i._id === listing._id) : false;
+
+  const currentUserId = user?.id || user?._id;
+  const sellerId = listing?.seller?._id || listing?.seller;
+  const isOwnListing = !!currentUserId && !!sellerId && sellerId === currentUserId;
+  const role = user?.role;
 
   if (loading) return <PageLoader />;
   if (notFound || !listing) {
@@ -288,34 +269,57 @@ export default function ListingDetail() {
                 )}
 
                 <div className="ld-actions">
-                  <Button
-                    variant="primary"
-                    fullWidth
-                    size="lg"
-                    icon={ShoppingCart}
-                    onClick={handleAddToCart}
-                    disabled={inCart}
-                  >
-                    {cartAdded ? 'Added to Cart!' : inCart ? 'Already in Cart' : 'Add to Shopping Cart'}
-                  </Button>
-
-                  <div style={{ display: 'flex', gap: 12 }}>
+                  {isOwnListing ? (
                     <Button
                       variant="secondary"
                       fullWidth
-                      icon={MessageSquare}
-                      onClick={handleMessageSeller}
+                      size="lg"
+                      icon={Package}
+                      onClick={() => navigate(`/edit-listing/${listing._id}`)}
                     >
-                      Chat Seller
+                      Manage My Listing
                     </Button>
-                    <Button
-                      variant={isFavorited ? 'outline' : 'secondary'}
-                      icon={Heart}
-                      onClick={handleFavorite}
-                      disabled={favLoading}
-                      title="Save Item"
-                    />
-                  </div>
+                  ) : role === 'seller' ? (
+                    <div
+                      style={{
+                        padding: '16px 20px', borderRadius: 'var(--radius-xl)',
+                        border: '1px dashed var(--border)', textAlign: 'center',
+                        color: 'var(--text-tertiary)', fontSize: 14,
+                      }}
+                    >
+                      This item is for buyers. Browse and manage your own listings from your dashboard.
+                    </div>
+                  ) : (
+                    <>
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        size="lg"
+                        icon={ShoppingCart}
+                        onClick={handleAddToCart}
+                        disabled={inCart}
+                      >
+                        {cartAdded ? 'Added to Cart!' : inCart ? 'Already in Cart' : 'Add to Shopping Cart'}
+                      </Button>
+
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <Button
+                          variant="secondary"
+                          fullWidth
+                          icon={MessageSquare}
+                          onClick={handleMessageSeller}
+                        >
+                          Chat Seller
+                        </Button>
+                        <Button
+                          variant={isFavorited(listing._id) ? 'outline' : 'secondary'}
+                          icon={Heart}
+                          onClick={handleFavorite}
+                          title="Save Item"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {listing.seller && (
