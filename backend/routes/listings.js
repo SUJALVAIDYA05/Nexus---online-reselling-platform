@@ -5,6 +5,7 @@ const cloudinary = require('../config/cloudinary');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/requireRole');
 const validateObjectId = require('../middleware/validateObjectId');
+const { listingRules } = require('../middleware/validators');
 
 // ---------------------------------------------------------------------------
 // Helper — delete images from Cloudinary (fire-and-forget)
@@ -152,7 +153,7 @@ router.get('/:id', validateObjectId('id'), async (req, res, next) => {
 // ---------------------------------------------------------------------------
 // POST /api/listings — create a listing (protected, seller/admin only)
 // ---------------------------------------------------------------------------
-router.post('/', authMiddleware, requireRole('seller', 'admin'), async (req, res, next) => {
+router.post('/', authMiddleware, requireRole('seller', 'admin'), listingRules, async (req, res, next) => {
   try {
     const { title, description, price, category, condition, images, location } =
       req.body;

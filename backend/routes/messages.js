@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
+const { messageLimiter } = require('../middleware/rateLimiter');
+const { messageRules, conversationRules } = require('../middleware/validators');
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const Listing = require('../models/Listing');
 
 // POST / - Create or find conversation
-router.post('/', authMiddleware, async (req, res, next) => {
+router.post('/', authMiddleware, conversationRules, async (req, res, next) => {
   try {
     const { listingId } = req.body;
     if (!listingId) return res.status(400).json({ error: 'listingId is required' });
@@ -99,7 +101,7 @@ router.get('/:id/messages', authMiddleware, async (req, res, next) => {
 });
 
 // POST /:id/messages - Send a message
-router.post('/:id/messages', authMiddleware, async (req, res, next) => {
+router.post('/:id/messages', authMiddleware, messageLimiter, messageRules, async (req, res, next) => {
   try {
     const { text } = req.body;
     if (!text || text.trim().length === 0) {
