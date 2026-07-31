@@ -1,10 +1,14 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./db');
 const User = require('./models/User');
 const { generateToken, authMiddleware } = require('./middleware/authMiddleware');
 const errorHandler = require('./middleware/errorHandler');
+const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
+const { signupRules, loginRules } = require('./middleware/validators');
 
 // Route imports
 const listingsRouter = require('./routes/listings');
@@ -23,17 +27,42 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 // The admin role is granted automatically ONLY when this email signs up/exists.
 // It can never be chosen or assigned by a client request.
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'sujalv641@gmail.com').toLowerCase();
 
-// --- Middleware ---
+// --- Security & Core Middleware ---
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https:"],
+      connectSrc: ["'self'", "https:", "http:"],
+    }
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Sanitize MongoDB operators from user input
+app.use(mongoSanitize());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve the React SPA build
+// Apply baseline rate limiting across all API routes
+app.use('/api', apiLimiter);
+
+// Serve static files
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+const publicDir = path.join(__dirname, '..', 'public');
 app.use(express.static(frontendDist));
+app.use(express.static(publicDir));
+app.use('/js', express.static(path.join(publicDir, '_legacy', 'js')));
 
 // Cookie parser (lightweight, no extra dep)
 app.use((req, res, next) => {
@@ -51,11 +80,9 @@ app.use((req, res, next) => {
 // --- Auth Routes ---
 
 // POST /api/auth/signup
-app.post('/api/auth/signup', async (req, res, next) => {
+app.post('/api/auth/signup', authLimiter, signupRules, async (req, res, next) => {
   try {
     const { name, email: rawEmail, password, role } = req.body;
-    if (!name || !rawEmail || !password) return res.status(400).json({ error: 'All fields are required' });
-    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
     const email = rawEmail.trim().toLowerCase();
 
@@ -79,6 +106,7 @@ app.post('/api/auth/signup', async (req, res, next) => {
 
     res.cookie('token', token, {
       httpOnly: true,
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
@@ -89,10 +117,9 @@ app.post('/api/auth/signup', async (req, res, next) => {
 });
 
 // POST /api/auth/login
-app.post('/api/auth/login', async (req, res, next) => {
+app.post('/api/auth/login', authLimiter, loginRules, async (req, res, next) => {
   try {
     const { email: rawEmail, password } = req.body;
-    if (!rawEmail || !password) return res.status(400).json({ error: 'Email and password are required' });
 
     const email = rawEmail.trim().toLowerCase();
     const userDoc = await User.findOne({ email }).select('+password');
@@ -115,6 +142,7 @@ app.post('/api/auth/login', async (req, res, next) => {
 
     res.cookie('token', token, {
       httpOnly: true,
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });

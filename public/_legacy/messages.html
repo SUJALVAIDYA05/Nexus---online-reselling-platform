@@ -795,6 +795,13 @@
       }
     }
 
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
     function renderMessages() {
       if (messages.length === 0) {
         messagesArea.innerHTML = `
@@ -830,10 +837,10 @@
             <div class="msg-bubble-container">
               ${!isMine ? `
                 <div class="user-avatar-sm" style="flex-shrink: 0;">
-                   ${(msg.sender && msg.sender.name ? msg.sender.name.charAt(0) : 'U').toUpperCase()}
+                   ${esc(msg.sender && msg.sender.name ? msg.sender.name.charAt(0) : 'U').toUpperCase()}
                 </div>
               ` : ''}
-              <div class="msg-bubble">${msg.text}</div>
+              <div class="msg-bubble">${esc(msg.text)}</div>
             </div>
             <div class="msg-time">
               ${formatTime(msg.createdAt)}

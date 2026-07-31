@@ -596,6 +596,13 @@
       revealElements();
     }
     
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
     function renderListing() {
       const { title, price, description, condition, location, category, seller, images, createdAt } = listing;
       
@@ -604,7 +611,7 @@
       let thumbsHtml = '';
       
       if (hasImages) {
-        imagesHtml = `<img src="${images[0].url}" alt="${title}" class="main-image" id="mainImage">`;
+        imagesHtml = `<img src="${esc(images[0].url)}" alt="${esc(title)}" class="main-image" id="mainImage">`;
         if (images.length > 1) {
           imagesHtml += `
             <button class="carousel-btn prev" onclick="changeImage(-1)"><i class="fas fa-chevron-left"></i></button>
@@ -613,7 +620,7 @@
           
           thumbsHtml = '<div class="thumbnail-strip" id="thumbnailStrip">';
           images.forEach((img, idx) => {
-            thumbsHtml += `<img src="${img.url}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="setImage(${idx})" alt="Thumbnail ${idx+1}">`;
+            thumbsHtml += `<img src="${esc(img.url)}" class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="setImage(${idx})" alt="Thumbnail ${idx+1}">`;
           });
           thumbsHtml += '</div>';
         }
@@ -645,27 +652,27 @@
           
           <!-- Right Column: Details -->
           <div class="listing-details reveal-right">
-            <div class="breadcrumb">${catName}</div>
-            <h1 class="listing-title">${title}</h1>
+            <div class="breadcrumb">${esc(catName)}</div>
+            <h1 class="listing-title">${esc(title)}</h1>
             <div class="listing-price">${formattedPrice}</div>
             
             <div class="badges">
-              <span class="badge condition"><i class="fas fa-tag"></i> ${conditionUpper}</span>
+              <span class="badge condition"><i class="fas fa-tag"></i> ${esc(conditionUpper)}</span>
             </div>
             
             <div class="divider"></div>
             
             <div class="listing-meta">
-              <p><i class="fas fa-map-marker-alt"></i> ${location || 'Location not specified'}</p>
+              <p><i class="fas fa-map-marker-alt"></i> ${location ? esc(location) : 'Location not specified'}</p>
               <p><i class="far fa-clock"></i> Posted ${timeAgo(createdAt)}</p>
             </div>
             
             <div class="divider"></div>
             
             <div class="seller-card">
-              <div class="seller-avatar">${sellerInitials}</div>
+              <div class="seller-avatar">${esc(sellerInitials)}</div>
               <div class="seller-info">
-                <h4>${sellerName}</h4>
+                <h4>${esc(sellerName)}</h4>
                 <p>${sellerDate}</p>
               </div>
             </div>
@@ -693,7 +700,7 @@
         
         <div class="description-section reveal">
           <h3>Description</h3>
-          <div class="description-content">${description}</div>
+          <div class="description-content">${esc(description)}</div>
         </div>
       `;
       
