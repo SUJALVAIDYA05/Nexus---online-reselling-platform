@@ -37,8 +37,12 @@ router.get('/', async (req, res, next) => {
 
     const filter = { status: 'active' };
 
+    function escapeRegex(str) {
+      return typeof str === 'string' ? str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+    }
+
     if (category) filter.category = category;
-    if (location) filter.location = { $regex: location, $options: 'i' };
+    if (location && typeof location === 'string') filter.location = { $regex: escapeRegex(location), $options: 'i' };
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
@@ -48,7 +52,7 @@ router.get('/', async (req, res, next) => {
     // Full-text search using MongoDB text index (ranked by relevance).
     // Falls back to regex if text index is unavailable.
     let useTextSearch = false;
-    if (q) {
+    if (q && typeof q === 'string') {
       filter.$text = { $search: q };
       useTextSearch = true;
     }
@@ -99,9 +103,10 @@ router.get('/', async (req, res, next) => {
       // Fallback: if $text fails (no text index yet), use regex search instead
       if (useTextSearch && textErr.code === 27) {
         delete filter.$text;
+        const safeQ = escapeRegex(q);
         filter.$or = [
-          { title: { $regex: q, $options: 'i' } },
-          { description: { $regex: q, $options: 'i' } },
+          { title: { $regex: safeQ, $options: 'i' } },
+          { description: { $regex: safeQ, $options: 'i' } },
         ];
         const fallbackSort = sort === 'price_asc' ? { price: 1 }
           : sort === 'price_desc' ? { price: -1 }
