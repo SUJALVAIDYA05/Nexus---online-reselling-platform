@@ -32,8 +32,8 @@ router.post('/', authMiddleware, (req, res, next) => {
 
     // Map Cloudinary response to a clean shape
     const urls = req.files.map((file) => ({
-      url: file.path,          // Cloudinary public URL
-      publicId: file.filename,  // Cloudinary public_id (for future deletion)
+      url: file.path || file.secure_url || file.url || '',
+      publicId: file.filename || file.public_id || file.publicId || '',
     }));
 
     res.status(201).json({ urls });
