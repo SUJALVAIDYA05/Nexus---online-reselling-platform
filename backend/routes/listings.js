@@ -155,6 +155,23 @@ router.get('/:id', validateObjectId('id'), async (req, res, next) => {
   }
 });
 
+function normalizeImages(images) {
+  if (!Array.isArray(images)) return [];
+  return images
+    .filter(Boolean)
+    .map((img, idx) => {
+      if (typeof img === 'string') {
+        return { url: img, publicId: `img-${Date.now()}-${idx}` };
+      }
+      if (typeof img === 'object' && img !== null) {
+        const url = img.url || img.path || img.secure_url || '';
+        const publicId = img.publicId || img.public_id || img.filename || `img-${Date.now()}-${idx}`;
+        return { url, publicId };
+      }
+      return img;
+    });
+}
+
 // ---------------------------------------------------------------------------
 // POST /api/listings — create a listing (protected, seller/admin only)
 // ---------------------------------------------------------------------------
@@ -182,7 +199,7 @@ router.post('/', authMiddleware, requireRole('seller', 'admin'), listingRules, a
       price,
       category,
       condition,
-      images,
+      images: normalizeImages(images),
       location,
       seller: req.user.id,
     });
@@ -211,6 +228,10 @@ router.put('/:id', authMiddleware, validateObjectId('id'), async (req, res, next
     const updates = {};
     for (const key of allowed) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    if (updates.images !== undefined) {
+      updates.images = normalizeImages(updates.images);
     }
 
     // Validate that key fields aren't being blanked out
@@ -245,7 +266,7 @@ router.put('/:id', authMiddleware, validateObjectId('id'), async (req, res, next
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /api/listings/:id — permanently delete (protected, owner seller OR admin)
+// DELETE /api/listings/:id — soft delete (protected, owner seller OR admin)
 // ---------------------------------------------------------------------------
 router.delete('/:id', authMiddleware, validateObjectId('id'), async (req, res, next) => {
   try {
@@ -256,12 +277,10 @@ router.delete('/:id', authMiddleware, validateObjectId('id'), async (req, res, n
       return res.status(403).json({ error: 'You can only delete your own listings' });
     }
 
-    // Clean up images on Cloudinary (fire-and-forget)
-    destroyImages(listing.images);
+    listing.status = 'removed';
+    await listing.save();
 
-    await Listing.findByIdAndDelete(req.params.id);
-
-    res.json({ message: 'Listing permanently deleted' });
+    res.json({ message: 'Listing removed', listing });
   } catch (err) {
     next(err);
   }

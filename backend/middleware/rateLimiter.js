@@ -6,6 +6,7 @@ const authLimiter = rateLimit({
   max: 10, // Limit each IP to 10 requests per windowMs
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  skip: () => process.env.NODE_ENV === 'test',
   message: {
     error: 'Too many authentication attempts from this IP, please try again after 15 minutes'
   }
@@ -17,6 +18,7 @@ const messageLimiter = rateLimit({
   max: 30, // Limit each IP to 30 message requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
   message: {
     error: 'Too many messages sent, please slow down'
   }
@@ -28,6 +30,7 @@ const apiLimiter = rateLimit({
   max: 200, // Limit each IP to 200 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
   message: {
     error: 'Too many requests, please try again later'
   }
@@ -38,3 +41,4 @@ module.exports = {
   messageLimiter,
   apiLimiter
 };
+

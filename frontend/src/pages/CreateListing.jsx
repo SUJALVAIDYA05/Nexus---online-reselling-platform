@@ -88,7 +88,10 @@ export default function CreateListing() {
       let uploadedUrls = [];
       if (imageFiles.length > 0) {
         const uploadRes = await api.upload(imageFiles);
-        uploadedUrls = (uploadRes.urls || uploadRes.data?.urls || []).map(u => ({ url: u.url }));
+        uploadedUrls = (uploadRes.urls || uploadRes.data?.urls || []).map(u => ({
+          url: u.url,
+          publicId: u.publicId || u.public_id || u.filename || ''
+        }));
       }
 
       await listings.create({
