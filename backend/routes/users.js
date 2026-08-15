@@ -4,7 +4,7 @@ const User = require('../models/User');
 const Listing = require('../models/Listing');
 const validateObjectId = require('../middleware/validateObjectId');
 const requireRole = require('../middleware/requireRole');
-const { authMiddleware } = require('../middleware/authMiddleware');
+const { authMiddleware, optionalAuth } = require('../middleware/authMiddleware');
 
 // ---------------------------------------------------------------------------
 // GET /api/users — list all users (admin only), paginated
@@ -43,7 +43,7 @@ router.get('/', authMiddleware, requireRole('admin'), async (req, res, next) => 
 // ---------------------------------------------------------------------------
 router.get(
   '/:id/listings',
-  (req, res, next) => authMiddleware(req, res, next, { optional: true }),
+  optionalAuth(),
   validateObjectId('id'),
   async (req, res, next) => {
     try {

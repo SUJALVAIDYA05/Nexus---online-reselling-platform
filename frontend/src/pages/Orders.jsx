@@ -170,11 +170,13 @@ export default function Orders() {
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>
                       {new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      {' · '}{order.paymentMethod?.toUpperCase()}
+                      {' · '}{order.paymentMethod === 'upi_qr' || order.paymentMethod === 'upi' ? 'UPI (QR Code)' : 'Cash on Delivery'}
+                      {order.paymentStatus && order.paymentStatus !== 'not_applicable' ? ` · Payment: ${order.paymentStatus.toUpperCase()}` : ''}
                       {!isAdmin && order.shippingAddress?.city && (
                         <> · <MapPin size={12} style={{ verticalAlign: -2 }} /> {order.shippingAddress.city}, {order.shippingAddress.state}</>
                       )}
                     </div>
+
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--accent)' }}>{fmt.format(order.totalAmount)}</div>

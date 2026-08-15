@@ -65,9 +65,13 @@ export const orders = {
     return api.get(`/orders${qs ? `?${qs}` : ''}`);
   },
   get: (id) => api.get(`/orders/${id}`),
+  getPaymentStatus: (id) => api.get(`/orders/${id}/payment-status`),
+  simulatePayment: (id) => api.post(`/orders/${id}/simulate-payment`),
   create: (data) => api.post('/orders', data),
   updateStatus: (id, status) => api.put(`/orders/${id}/status`, { status }),
 };
+
+
 
 export const listings = {
   list: (params = {}) => {
