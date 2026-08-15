@@ -48,14 +48,30 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['upi', 'cod'],
+      enum: ['upi_qr', 'cod'],
       required: [true, 'Payment method is required'],
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['not_applicable', 'pending', 'paid', 'failed', 'expired'],
+      default: 'not_applicable',
+    },
+    razorpay: {
+      qrCodeId: { type: String, default: null },
+      qrImageUrl: { type: String, default: null },
+      paymentId: { type: String, default: null },
+      expiresAt: { type: Date, default: null },
+    },
+    needsReview: {
+      type: Boolean,
+      default: false,
     },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'shipped', 'completed', 'cancelled'],
       default: 'pending',
     },
+
   },
   {
     timestamps: true,

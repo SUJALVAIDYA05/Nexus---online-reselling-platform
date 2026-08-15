@@ -18,6 +18,8 @@ const usersRouter = require('./routes/users');
 const uploadsRouter = require('./routes/uploads');
 const conversationsRouter = require('./routes/messages');
 const ordersRouter = require('./routes/orders');
+const paymentsWebhookRouter = require('./routes/paymentsWebhook');
+const { releaseExpiredReservations } = require('./utils/orderCleanup');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +52,10 @@ app.use(helmet({
 
 // Sanitize MongoDB operators from user input
 app.use(mongoSanitize());
+
+// Razorpay webhook requires exact raw request body for HMAC verification — must be registered before express.json()
+app.use('/api/payments/webhook/razorpay', express.raw({ type: 'application/json' }), paymentsWebhookRouter);
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -201,6 +207,11 @@ app.use(errorHandler);
 // --- Start ---
 async function start() {
   await connectDB();
+
+  // Run initial cleanup and set 60-second periodic interval for releasing expired UPI reservations
+  releaseExpiredReservations();
+  setInterval(releaseExpiredReservations, 60000);
+
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });

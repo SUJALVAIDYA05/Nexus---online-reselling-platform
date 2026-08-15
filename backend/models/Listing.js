@@ -46,9 +46,14 @@ const listingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'sold', 'removed'],
+      enum: ['active', 'reserved', 'sold', 'removed'],
       default: 'active',
     },
+    reservedUntil: {
+      type: Date,
+      default: null,
+    },
+
   },
   {
     timestamps: true,
