@@ -3,7 +3,7 @@ services:
     name: nexus
     runtime: node
     plan: free
-    buildCommand: npm install --prefix frontend --include=dev && npm run build --prefix frontend && npm install --prefix backend --omit=dev
+    buildCommand: chmod +x build.sh && ./build.sh
     startCommand: node backend/server.js
     envVars:
       - key: NODE_ENV
