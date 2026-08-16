@@ -3,8 +3,8 @@ services:
     name: nexus
     runtime: node
     plan: free
-    buildCommand: cd frontend && NODE_ENV=development npm ci && npm run build && cd ../backend && npm ci --omit=dev
-    startCommand: cd backend && node server.js
+    buildCommand: npm install --prefix frontend && npm run build --prefix frontend && npm install --prefix backend --omit=dev
+    startCommand: node backend/server.js
     envVars:
       - key: NODE_ENV
         value: production
