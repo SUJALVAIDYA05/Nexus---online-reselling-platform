@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./db');
@@ -95,12 +96,16 @@ app.use(express.urlencoded({ extended: true }));
 // Apply baseline rate limiting across all API routes
 app.use('/api', apiLimiter);
 
-// Serve static files
+// Serve static files (if built frontend / public dir exists)
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 const publicDir = path.join(__dirname, '..', 'public');
-app.use(express.static(frontendDist));
-app.use(express.static(publicDir));
-app.use('/js', express.static(path.join(publicDir, '_legacy', 'js')));
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+}
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+  app.use('/js', express.static(path.join(publicDir, '_legacy', 'js')));
+}
 
 // Cookie parser (lightweight, no extra dep)
 app.use((req, res, next) => {
@@ -227,19 +232,33 @@ app.use('/api/orders', ordersRouter);
 
 // --- Serve HTML pages with proper routes ---
 // The original /browse page is preserved as-is per project constraints.
-// All other pages are now served by the React SPA.
+// All other pages are served by the React SPA if built locally, or fallback to API status.
 
-// Keep the original browse page untouched
+// Keep the original browse page untouched (if public/browse.html exists)
 app.get('/browse', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'browse.html'));
+  const browsePath = path.join(__dirname, '..', 'public', 'browse.html');
+  if (fs.existsSync(browsePath)) {
+    return res.sendFile(browsePath);
+  }
+  const clientUrl = process.env.CLIENT_URL || 'https://nexus-beige-chi.vercel.app';
+  res.redirect(`${clientUrl.replace(/\/+$/, '')}/browse`);
 });
 
-// --- React SPA catch-all: serve index.html for all non-API, non-browse routes ---
+// --- Catch-all: serve SPA index.html if present, else return API status JSON ---
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'Not found' });
   }
-  res.sendFile(path.join(frontendDist, 'index.html'));
+  const indexPath = path.join(frontendDist, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.json({
+    message: 'Nexus API backend is running',
+    status: 'ok',
+    health: '/api/health',
+    client: process.env.CLIENT_URL || 'https://nexus-beige-chi.vercel.app'
+  });
 });
 
 // --- Centralized error handler (must be last) ---
