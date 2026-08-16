@@ -4,15 +4,36 @@ const Category = require('../models/Category');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/requireRole');
 
+const DEFAULT_CATEGORIES = [
+  { name: 'Mobiles', slug: 'mobiles' },
+  { name: 'Electronics', slug: 'electronics' },
+  { name: 'Vehicles', slug: 'vehicles' },
+  { name: 'Furniture', slug: 'furniture' },
+  { name: 'Fashion', slug: 'fashion' },
+  { name: 'Real Estate', slug: 'real-estate' },
+  { name: 'Jobs', slug: 'jobs' },
+  { name: 'Services', slug: 'services' },
+  { name: 'Books & Hobbies', slug: 'books-hobbies' },
+  { name: 'Pets', slug: 'pets' },
+];
+
 // ---------------------------------------------------------------------------
 // GET /api/categories — list all categories (parent populated)
 // ---------------------------------------------------------------------------
 router.get('/', async (_req, res, next) => {
   try {
-    const categories = await Category.find()
+    let categories = await Category.find()
       .populate('parent', 'name slug')
       .sort({ name: 1 })
       .lean();
+
+    if (categories.length === 0) {
+      await Category.insertMany(DEFAULT_CATEGORIES);
+      categories = await Category.find()
+        .populate('parent', 'name slug')
+        .sort({ name: 1 })
+        .lean();
+    }
 
     res.json(categories);
   } catch (err) {

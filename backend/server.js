@@ -268,6 +268,30 @@ app.use(errorHandler);
 async function start() {
   await connectDB();
 
+  // Auto-seed default categories if database has none
+  try {
+    const Category = require('./models/Category');
+    const catCount = await Category.countDocuments();
+    if (catCount === 0) {
+      const DEFAULT_CATEGORIES = [
+        { name: 'Mobiles', slug: 'mobiles' },
+        { name: 'Electronics', slug: 'electronics' },
+        { name: 'Vehicles', slug: 'vehicles' },
+        { name: 'Furniture', slug: 'furniture' },
+        { name: 'Fashion', slug: 'fashion' },
+        { name: 'Real Estate', slug: 'real-estate' },
+        { name: 'Jobs', slug: 'jobs' },
+        { name: 'Services', slug: 'services' },
+        { name: 'Books & Hobbies', slug: 'books-hobbies' },
+        { name: 'Pets', slug: 'pets' },
+      ];
+      await Category.insertMany(DEFAULT_CATEGORIES);
+      console.log('Seeded default categories into database');
+    }
+  } catch (seedErr) {
+    console.error('Category auto-seed check failed:', seedErr.message);
+  }
+
   // Run initial cleanup and set 60-second periodic interval for releasing expired UPI reservations
   releaseExpiredReservations();
   setInterval(releaseExpiredReservations, 60000);
