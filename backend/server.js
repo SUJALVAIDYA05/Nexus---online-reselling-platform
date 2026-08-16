@@ -31,6 +31,12 @@ if (!JWT_SECRET) {
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Trust the reverse proxy (Render, Railway, etc.) so that
+// express-rate-limit sees real client IPs and secure cookies work.
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
 // The admin role is granted automatically ONLY when this email signs up/exists.
 // It can never be chosen or assigned by a client request.
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'sujalv641@gmail.com').toLowerCase();
@@ -173,6 +179,11 @@ app.get('/api/auth/me', authMiddleware, async (req, res, next) => {
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logged out' });
+});
+
+// --- Health Check (used by Render / monitoring) ---
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // --- API Routers ---

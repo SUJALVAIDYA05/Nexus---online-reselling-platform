@@ -1,8 +1,11 @@
 {
   "name": "nexus-backend",
   "version": "1.0.0",
-  "description": "Backend for Nexus Consulting website",
+  "description": "Backend for Nexus — online reselling platform",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
