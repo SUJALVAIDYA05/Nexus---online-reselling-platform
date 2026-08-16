@@ -29,6 +29,8 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+const cors = require('cors');
+
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Trust the reverse proxy (Render, Railway, etc.) so that
@@ -36,6 +38,30 @@ const isProduction = process.env.NODE_ENV === 'production';
 if (isProduction) {
   app.set('trust proxy', 1);
 }
+
+// Allowed origins for CORS
+const allowedOrigins = [
+  'https://nexus-beige-chi.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      !isProduction
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS: ' + origin));
+  },
+  credentials: true
+}));
 
 // The admin role is granted automatically ONLY when this email signs up/exists.
 // It can never be chosen or assigned by a client request.
@@ -119,7 +145,7 @@ app.post('/api/auth/signup', authLimiter, signupRules, async (req, res, next) =>
     res.cookie('token', token, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.status(201).json({ user, token });
@@ -155,7 +181,7 @@ app.post('/api/auth/login', authLimiter, loginRules, async (req, res, next) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.json({ user, token });
@@ -177,7 +203,11 @@ app.get('/api/auth/me', authMiddleware, async (req, res, next) => {
 
 // POST /api/auth/logout
 app.post('/api/auth/logout', (req, res) => {
-  res.clearCookie('token');
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
+  });
   res.json({ message: 'Logged out' });
 });
 

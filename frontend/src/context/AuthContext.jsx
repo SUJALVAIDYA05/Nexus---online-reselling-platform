@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { auth } from '../api/api';
+import { auth, setAuthToken } from '../api/api';
 
 const AuthContext = createContext(null);
 
@@ -22,19 +22,25 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const data = await auth.login({ email, password });
+    if (data?.token) setAuthToken(data.token);
     setUser(data.user);
     return data;
   };
 
   const signup = async (name, email, password, role = 'buyer') => {
     const data = await auth.signup({ name, email, password, role });
+    if (data?.token) setAuthToken(data.token);
     setUser(data.user);
     return data;
   };
 
   const logout = async () => {
-    await auth.logout();
-    setUser(null);
+    try {
+      await auth.logout();
+    } finally {
+      setAuthToken(null);
+      setUser(null);
+    }
   };
 
   return (

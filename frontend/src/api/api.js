@@ -1,9 +1,28 @@
-const BASE_URL = '/api';
+const VITE_API_URL = import.meta.env.VITE_API_URL || '';
+const BASE_URL = VITE_API_URL ? `${VITE_API_URL.replace(/\/+$/, '')}/api` : '/api';
+
+let memoryToken = typeof window !== 'undefined' ? localStorage.getItem('nexus_token') : null;
+
+export const setAuthToken = (token) => {
+  memoryToken = token;
+  if (typeof window !== 'undefined') {
+    if (token) {
+      localStorage.setItem('nexus_token', token);
+    } else {
+      localStorage.removeItem('nexus_token');
+    }
+  }
+};
+
+export const getAuthToken = () => {
+  return memoryToken || (typeof window !== 'undefined' ? localStorage.getItem('nexus_token') : null);
+};
 
 async function request(method, path, body = null, options = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (options.token) {
-    headers['Authorization'] = `Bearer ${options.token}`;
+  const token = options.token || getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const config = { method, headers, credentials: 'include' };
@@ -30,8 +49,14 @@ export const api = {
   async upload(files) {
     const formData = new FormData();
     files.forEach(file => formData.append('images', file));
+    const headers = {};
+    const token = getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     const res = await fetch(`${BASE_URL}/uploads`, {
       method: 'POST',
+      headers,
       body: formData,
       credentials: 'include',
     });
