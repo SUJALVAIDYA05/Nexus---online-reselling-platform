@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "seed": "node scripts/seedCategories.js && node scripts/seedRealisticData.js",
+    "seed:data": "node scripts/seedRealisticData.js",
     "test": "jest"
   },
   "dependencies": {
