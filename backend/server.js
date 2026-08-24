@@ -144,7 +144,13 @@ app.post('/api/auth/signup', authLimiter, signupRules, async (req, res, next) =>
     // Password hashing is handled by the User model's pre-save hook
     const newUser = await User.create({ name, email, password, role: assignedRole });
 
-    const user = { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role };
+    const user = {
+      id: newUser._id.toString(),
+      _id: newUser._id.toString(),
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role
+    };
     const token = generateToken(newUser);
 
     res.cookie('token', token, {
@@ -180,7 +186,13 @@ app.post('/api/auth/login', authLimiter, loginRules, async (req, res, next) => {
       await userDoc.save();
     }
 
-    const user = { id: userDoc._id, name: userDoc.name, email: userDoc.email, role: userDoc.role };
+    const user = {
+      id: userDoc._id.toString(),
+      _id: userDoc._id.toString(),
+      name: userDoc.name,
+      email: userDoc.email,
+      role: userDoc.role
+    };
     const token = generateToken(userDoc);
 
     res.cookie('token', token, {
@@ -200,7 +212,9 @@ app.get('/api/auth/me', authMiddleware, async (req, res, next) => {
   try {
     const userDoc = await User.findById(req.user.id);
     if (!userDoc) return res.status(404).json({ error: 'User not found' });
-    res.json({ user: userDoc.toJSON() });
+    const user = userDoc.toJSON();
+    user.id = user._id.toString();
+    res.json({ user });
   } catch (err) {
     next(err);
   }
